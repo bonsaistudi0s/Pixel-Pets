@@ -1,6 +1,7 @@
 package com.bonsai.pixelpets;
 
 
+import com.bonsai.pixelpets.pixelpets.PixelPetDataRegistry;
 import com.bonsai.pixelpets.registry.*;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -10,6 +11,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
@@ -47,6 +50,8 @@ public class PixelPetsNeoforge {
             eventBus.addListener(PixelPetsNeoforgeClient::registerParticleFactories);
         }
 
+        NeoForge.EVENT_BUS.addListener(this::registerOnReloadMappings);
+
         PixelPets.init();
 
     }
@@ -61,5 +66,9 @@ public class PixelPetsNeoforge {
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         // TODO this is how I did entity attributes, might be an easier way in common?
+    }
+
+    public void registerOnReloadMappings(AddReloadListenerEvent event) {
+        event.addListener(PixelPetDataRegistry.INSTANCE);
     }
 }

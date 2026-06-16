@@ -1,0 +1,6 @@
+{
+  "entity_type": "pixelpets:default_pet",
+  "generic_name": "Gecko",
+  "tame_item": "minecraft:spider_eye",
+  "base_health": 16
+}

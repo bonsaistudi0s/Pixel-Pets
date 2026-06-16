@@ -1,13 +1,11 @@
 package com.bonsai.pixelpets.pixelpets;
 
 import com.bonsai.pixelpets.PixelPets;
-import com.bonsai.pixelpets.entities.AbstractPixelPet;
+import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
@@ -25,8 +23,11 @@ import java.util.UUID;
 public class PixelPet {
 
     public static final PixelPet EMPTY = new PixelPet((Void)null);
+    private PixelPet (Void v) {
+        this.dataLocation = null;
+    }
 
-    private final EntityType<AbstractPixelPet> type;
+    private final ResourceLocation dataLocation;
     private String name = "Pixel Pet";
     private int level = 0;
     private UUID petUUID = null;
@@ -34,46 +35,41 @@ public class PixelPet {
     private static final int MAX_FAINT_COOLDOWN = 20 * 60 * 5;
     private int faintCooldown;
 
-    public static final Codec<PixelPet> CODEC = Codec.lazyInitialized(
-            () -> RecordCodecBuilder.create(instance -> instance.group(
-                    ResourceLocation.CODEC
-                            .flatXmap(
-                                    rl -> Optional.ofNullable(BuiltInRegistries.ENTITY_TYPE.get(rl))
-                                            .map(t -> (EntityType<AbstractPixelPet>) t)
-                                            .map(DataResult::success)
-                                            .orElseGet(() -> DataResult.error(() -> "Unknown entity type: " + rl)),
-                                    type -> DataResult.success(BuiltInRegistries.ENTITY_TYPE.getKey(type))
-                            )
-                            .fieldOf("type")
-                            .forGetter(PixelPet::getType),
-                    Codec.STRING.optionalFieldOf("name").forGetter(p -> Optional.ofNullable(p.getName())),
-                    ExtraCodecs.intRange(0, 99).fieldOf("level").orElse(0).forGetter(PixelPet::getLevel),
-                    UUIDUtil.CODEC.optionalFieldOf("uuid").forGetter(p -> Optional.ofNullable(p.getPetUUID())),
-                    ExtraCodecs.intRange(0, MAX_FAINT_COOLDOWN).fieldOf("faint_cooldown").orElse(0).forGetter(PixelPet::getFaintCooldown)
-            ).apply(instance, (type, name, level, uuid, faintCooldown) -> {
-                PixelPet pet = new PixelPet(type);
-                name.ifPresent(pet::setName);
-                pet.setLevel(level);
-                uuid.ifPresent(pet::setPetUUID);
-                pet.setFaintCooldown(faintCooldown);
-                return pet;
-            }))
-    );
+    public static final Codec<PixelPet> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            ResourceLocation.CODEC.fieldOf("data").forGetter(PixelPet::getDataLocation),
+            Codec.STRING.optionalFieldOf("name").forGetter(p -> Optional.ofNullable(p.getName())),
+            ExtraCodecs.intRange(0, 99).fieldOf("level").orElse(0).forGetter(PixelPet::getLevel),
+            UUIDUtil.CODEC.optionalFieldOf("uuid").forGetter(p -> Optional.ofNullable(p.getPetUUID())),
+            ExtraCodecs.intRange(0, MAX_FAINT_COOLDOWN).fieldOf("faint_cooldown").orElse(0).forGetter(PixelPet::getFaintCooldown)
+    ).apply(instance, PixelPet::new));
 
-    public PixelPet(EntityType<AbstractPixelPet> type) {
-        this.type = type;
+    public PixelPet(ResourceLocation dataLocation) {
+        this.dataLocation = dataLocation;
     }
 
-    public PixelPet (Void v) {
-        this.type = null;
+    public PixelPet(ResourceLocation dataLocation, Optional<String> name, int level, Optional<UUID> uuid, int faintCooldown) {
+        this.dataLocation = dataLocation;
+        name.ifPresent(n -> this.name = n);
+        this.level = level;
+        uuid.ifPresent(u -> this.petUUID = u);
+        this.faintCooldown = faintCooldown;
     }
 
     public boolean isEmpty() {
-        return this == EMPTY || this.type == null;
+        return this == EMPTY || this.dataLocation == null;
     }
 
-    public EntityType<AbstractPixelPet> getType() {
-        return type;
+    public ResourceLocation getDataLocation() {
+        return this.dataLocation;
+    }
+    public Optional<PixelPetData> getData() {
+        return PixelPetDataRegistry.INSTANCE.get(this.dataLocation);
+    }
+
+    public EntityType<? extends AbstractPixelPetEntity> getEntityType() {
+        return getData()
+                .map(PixelPetData::entityType)
+                .orElseThrow(() -> new IllegalStateException("Unknown species: " + this.dataLocation));
     }
 
     public String getName() {
@@ -117,11 +113,8 @@ public class PixelPet {
     }
 
     public Tag save(HolderLookup.Provider registryAccess, Tag tag) {
-        if (this.isEmpty()) {
-            throw new IllegalStateException("Cannot encode empty PixelPet");
-        } else {
-            return CODEC.encode(this, registryAccess.createSerializationContext(NbtOps.INSTANCE), tag).getOrThrow();
-        }
+        if (this.isEmpty()) throw new IllegalStateException("Cannot encode empty PixelPet");
+        return CODEC.encode(this, registryAccess.createSerializationContext(NbtOps.INSTANCE), tag).getOrThrow();
     }
 
     public static PixelPet load(HolderLookup.Provider registryAccess, CompoundTag tag) {

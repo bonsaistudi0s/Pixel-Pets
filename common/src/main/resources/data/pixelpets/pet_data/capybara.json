@@ -1,0 +1,7 @@
+{
+  "entity_type": "pixelpets:default_pet",
+  "generic_name": "Capybara",
+  "tame_item": "minecraft:seagrass",
+  "base_health": 16,
+  "attacking": false
+}
