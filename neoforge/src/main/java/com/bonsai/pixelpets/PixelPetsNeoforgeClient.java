@@ -1,5 +1,7 @@
 package com.bonsai.pixelpets;
 
+import com.bonsai.pixelpets.client.renderer.entity.AbstractPixelPetRenderer;
+import com.bonsai.pixelpets.registry.ModEntities;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
@@ -19,7 +21,7 @@ public class PixelPetsNeoforgeClient {
         //event.registerBlockEntityRenderer();
 
         // Entity renderers
-        //event.registerEntityRenderer();
+        event.registerEntityRenderer(ModEntities.DEFAULT_PET, AbstractPixelPetRenderer::new);
 
         // Projectile renderers
         //event.registerEntityRenderer();
