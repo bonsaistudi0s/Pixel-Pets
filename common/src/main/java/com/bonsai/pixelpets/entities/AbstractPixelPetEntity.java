@@ -143,7 +143,7 @@ public class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity {
         if (!this.isTame()) return List.of();
         if (this.getOwner() == null) return List.of();
         if (this.getOwner() instanceof Player player) {
-            return ((PlayerPetAccess) player).pixelPets$getActivePets();
+            return ((PlayerPetAccess) player).pixelPets$getActivePets().stream().filter(uuid -> uuid.compareTo(this.uuid) != 0).toList();
         }
         return List.of();
     }
