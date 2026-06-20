@@ -1,26 +1,30 @@
 package com.bonsai.pixelpets.entities;
 
+import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.pixelpets.PixelPetData;
 import com.bonsai.pixelpets.pixelpets.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.AgeableMob;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -29,9 +33,41 @@ import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractPixelPetEntity.class);
+    /// Geckolib </br>
+    /// DevNote: Make sure the animations in *.animation.json match the form below
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    public static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.walk");
+    public static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.run");
+    public static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.idle");
+    public static final RawAnimation SIT = RawAnimation.begin().thenLoop("animation.sit");
+    public static final RawAnimation SLEEPING = RawAnimation.begin().thenLoop("animation.sleeping");
+    public static final RawAnimation SWIM = RawAnimation.begin().thenLoop("animation.swim");
+    public static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.attack");
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
+        controllerRegistrar.add(
+                new AnimationController<>(this, "Sit", 0,
+                        (state) -> (this.isInSittingPose()) ? state.setAndContinue(SIT) : PlayState.STOP),
+                new AnimationController<>(this, "Swim", 0,
+                        (state) -> this.isSwimming() ? state.setAndContinue(SWIM) : PlayState.STOP),
+                new AnimationController<>(this, "Walk/Run/Idle", 0,
+                        (state) -> state.isMoving() ? state.setAndContinue(this.isSprinting() ? RUN : WALK) : state.setAndContinue(IDLE))
+        );
+    }
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
+    }
+
+    /// Pet stuff
 
     private static final EntityDataAccessor<String> DATA_ID =
             SynchedEntityData.defineId(AbstractPixelPetEntity.class, EntityDataSerializers.STRING);
@@ -103,45 +139,31 @@ public class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity {
         return getData().map(PixelPetData::attacking).orElse(PixelPetData.DEFAULT_ATTACKING);
     }
 
-    // Geckolib
-    // DevNote: Make sure the animations in *.animation.json match the form below
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    public static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.walk");
-    public static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.run");
-    public static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.idle");
-    public static final RawAnimation SIT = RawAnimation.begin().thenLoop("animation.sit");
-    public static final RawAnimation SLEEPING = RawAnimation.begin().thenLoop("animation.sleeping");
-    public static final RawAnimation SWIM = RawAnimation.begin().thenLoop("animation.swim");
-    public static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.attack");
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
-        controllerRegistrar.add(
-                new AnimationController<>(this, "Sit", 0,
-                        (state) -> (this.isInSittingPose()) ? state.setAndContinue(SIT) : PlayState.STOP),
-                new AnimationController<>(this, "Swim", 0,
-                        (state) -> this.isSwimming() ? state.setAndContinue(SWIM) : PlayState.STOP),
-                new AnimationController<>(this, "Walk/Run/Idle", 0,
-                        (state) -> state.isMoving() ? state.setAndContinue(this.isSprinting() ? RUN : WALK) : state.setAndContinue(IDLE))
-        );
-    }
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.cache;
+    private List<UUID> getOtherPets() {
+        if (!this.isTame()) return List.of();
+        if (this.getOwner() == null) return List.of();
+        if (this.getOwner() instanceof Player player) {
+            return ((PlayerPetAccess) player).pixelPets$getActivePets();
+        }
+        return List.of();
     }
 
-    // TODO custom movement goal that includes running + swimming
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new GentleFloatGoal(this));
         this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this)); // TODO custom goal here? idk if sitting should be possible for normal pet use
-        this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0f, 8.0f, 1.5f)); // TODO custom follow goal that despawns if can't stay close
+        this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0f, 6.0f, 1.5f));
         this.goalSelector.addGoal(10, new WaterAvoidingRandomStrollGoal(this, 1.0f));
         this.goalSelector.addGoal(11, new RandomLookAroundGoal(this));
     }
 
     public static net.minecraft.world.entity.ai.attributes.AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 8)          // Replaced in constructor with PixelPetData value
+                // Replaced in constructor with PixelPetData value
+                .add(Attributes.MAX_HEALTH, 8)
+
+                // Normal
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
+                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.7f)
                 .add(Attributes.ATTACK_DAMAGE, 1)
                 .add(Attributes.FOLLOW_RANGE, 10);
     }
@@ -188,8 +210,10 @@ public class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity {
 
     private void tryToTame(Player player) {
         if (this.random.nextInt(100) <= getTameChance()) {
+            // TODO add to player pet inv here
+            //  If empty slot, auto equip and link uuid
+            //  Else despawn pixel effect
             this.tame(player);
-            this.setOrderedToSit(true);
             this.level().broadcastEntityEvent(this, (byte)7);
         } else {
             this.level().broadcastEntityEvent(this, (byte)6);
@@ -198,7 +222,53 @@ public class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+
+        this.setSprinting(this.getOwner() != null && this.getOwner().isSprinting());
+    }
+
+    @Override
     public @Nullable AgeableMob getBreedOffspring(ServerLevel serverLevel, AgeableMob ageableMob) {
         return null;
+    }
+
+    @Override
+    public boolean canSpawnSprintParticle() {
+        return super.canSpawnSprintParticle() && this.getDeltaMovement().lengthSqr() > 0.01f;
+    }
+
+    @Override
+    public void updateSwimming() {
+        this.setSwimming(this.isInWater() && !this.isPassenger());
+    }
+
+    public static class GentleFloatGoal extends FloatGoal {
+        private final Mob mob;
+
+        public GentleFloatGoal(Mob mob) {
+            super(mob);
+            this.mob = mob;
+        }
+
+        @Override
+        public void tick() {
+            if (this.mob.isInLava()) {
+                if (this.mob.getRandom().nextFloat() < 0.8F) {
+                    this.mob.getJumpControl().jump();
+                }
+            } else {
+                Vec3 motion = this.mob.getDeltaMovement();
+
+                double fluidHeight = this.mob.getFluidHeight(FluidTags.WATER);
+                double targetSubmersion = 0.1f;
+
+                double diff = fluidHeight - targetSubmersion;
+
+                double correction = Math.clamp(diff * 0.2D, -0.04D, 0.04D);
+
+                this.mob.setDeltaMovement(motion.x, motion.y + correction, motion.z);
+            }
+        }
     }
 }

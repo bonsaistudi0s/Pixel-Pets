@@ -6,6 +6,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.List;
+import java.util.UUID;
+
 public class PixelPetsInventory {
 
     // 20 slots is 1 page size
@@ -84,6 +87,10 @@ public class PixelPetsInventory {
                 this.petStatus = PixelPetStatus.PASSIVE;
             }
         }
+    }
+
+    public List<UUID> getEquippedPetUUIDs() {
+        return this.equipped.stream().filter(pixelPet -> !pixelPet.isEmpty() && pixelPet.getPetUUID() != null).map(PixelPet::getPetUUID).toList();
     }
 
 }
