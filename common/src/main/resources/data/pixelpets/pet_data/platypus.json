@@ -1,0 +1,6 @@
+{
+  "entity_type": "pixelpets:amphibious_pet",
+  "generic_name": "Platypus",
+  "tame_item": "minecraft:cod",
+  "base_health": 16
+}

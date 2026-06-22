@@ -2,7 +2,7 @@ package com.bonsai.pixelpets;
 
 
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
-import com.bonsai.pixelpets.pixelpets.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
 import com.bonsai.pixelpets.registry.*;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -28,6 +28,9 @@ public class PixelPetsNeoforge {
     public PixelPetsNeoforge(IEventBus eventBus, Dist dist) {
 
         PixelPetsNeoforge.eventBus = eventBus;
+
+        ModAttributes.init();
+        bind(Registries.ATTRIBUTE, ModAttributes::registerAttributes);
 
         bind(Registries.PARTICLE_TYPE, ModParticles::register);
 
@@ -69,7 +72,9 @@ public class PixelPetsNeoforge {
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         // TODO this is how I did entity attributes, might be an easier way in common?
-        event.put(ModEntities.DEFAULT_PET, AbstractPixelPetEntity.createAttributes().build());
+        event.put(ModEntities.WALKING_PET, AbstractPixelPetEntity.createAttributes().build());
+        event.put(ModEntities.SWIMMING_PET, AbstractPixelPetEntity.createAttributes().build());
+        event.put(ModEntities.AMPHIBIOUS_PET, AbstractPixelPetEntity.createAttributes().build());
     }
 
     public void registerOnReloadMappings(AddReloadListenerEvent event) {

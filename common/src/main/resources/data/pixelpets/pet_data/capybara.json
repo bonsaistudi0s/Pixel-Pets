@@ -1,7 +1,6 @@
 {
-  "entity_type": "pixelpets:default_pet",
+  "entity_type": "pixelpets:walking_pet",
   "generic_name": "Capybara",
   "tame_item": "minecraft:seagrass",
-  "base_health": 16,
-  "attacking": false
+  "base_health": 16
 }

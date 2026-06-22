@@ -1,7 +1,7 @@
 package com.bonsai.pixelpets;
 
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
-import com.bonsai.pixelpets.pixelpets.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
 import com.bonsai.pixelpets.registry.*;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -27,6 +27,9 @@ public class PixelPetsFabric implements ModInitializer {
     
     @Override
     public void onInitialize() {
+
+        ModAttributes.init();
+        bind(BuiltInRegistries.ATTRIBUTE, ModAttributes::registerAttributes);
 
         bind(BuiltInRegistries.PARTICLE_TYPE, ModParticles::register);
 
@@ -59,7 +62,9 @@ public class PixelPetsFabric implements ModInitializer {
 
     private void registerEntityAttributes() {
         // TODO this is how I did entity attributes, might be an easier way in common?
-        FabricDefaultAttributeRegistry.register(ModEntities.DEFAULT_PET, AbstractPixelPetEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(ModEntities.WALKING_PET, AbstractPixelPetEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(ModEntities.SWIMMING_PET, AbstractPixelPetEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(ModEntities.AMPHIBIOUS_PET, AbstractPixelPetEntity.createAttributes());
     }
 
 

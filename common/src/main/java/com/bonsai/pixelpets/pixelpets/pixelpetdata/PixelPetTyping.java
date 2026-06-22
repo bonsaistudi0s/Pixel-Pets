@@ -1,5 +1,6 @@
-package com.bonsai.pixelpets.pixelpets;
+package com.bonsai.pixelpets.pixelpets.pixelpetdata;
 
+import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import net.minecraft.util.StringRepresentable;
 
 public enum PixelPetTyping implements StringRepresentable {

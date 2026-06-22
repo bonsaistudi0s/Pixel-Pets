@@ -5,6 +5,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -50,5 +51,4 @@ public interface IPlatformHelper {
     CreativeModeTab.Builder tabBuilder();
     <T extends BlockEntity> BlockEntityType<T> blockEntityType(BiFunction<BlockPos, BlockState, T> function, Block... validBlocks);
     SimpleParticleType simpleParticleType();
-
 }

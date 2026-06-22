@@ -1,4 +1,4 @@
-package com.bonsai.pixelpets.pixelpets;
+package com.bonsai.pixelpets.pixelpets.pixelpetdata;
 
 import com.bonsai.pixelpets.PixelPets;
 import com.google.gson.GsonBuilder;
@@ -38,7 +38,7 @@ public class PixelPetDataRegistry extends SimpleJsonResourceReloadListener {
                                 data.tameItem(),
                                 data.baseHealth(),
                                 data.animationId(),
-                                data.attacking(),
+                                data.attack(),
                                 data.tameChance(),
                                 data.scares(),
                                 data.rarity()

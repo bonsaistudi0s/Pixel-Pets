@@ -1,4 +1,4 @@
-package com.bonsai.pixelpets.pixelpets;
+package com.bonsai.pixelpets.pixelpets.pixelpetdata;
 
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
@@ -14,6 +14,7 @@ import net.minecraft.world.item.Items;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeMap;
 
 // TODO add spawning biome stuff?
 // TODO typing (on hold, joosh deciding)
@@ -24,7 +25,7 @@ public record PixelPetData(
         Item tameItem,
         int baseHealth,
         ResourceLocation animationId,
-        boolean attacking,
+        LeveledAttackData attack,
         int tameChance,
         List<EntityType<?>> scares, // TODO this will be a bit challenging to implement since scare code is in the scared entity
         PixelPetRarity rarity
@@ -34,7 +35,7 @@ public record PixelPetData(
     public static final Item DEFAULT_TAME_ITEM = Items.APPLE;
     public static final int DEFAULT_BASE_HEALTH = 20;
     public static final ResourceLocation DEFAULT_ANIMATION_ID = PixelPets.identifier("default_pet");
-    public static final boolean DEFAULT_ATTACKING = false;
+    public static final LeveledAttackData DEFAULT_ATTACK = new LeveledAttackData(new TreeMap<>());
     public static final int DEFAULT_TAME_CHANCE = 25;
     public static final PixelPetRarity DEFAULT_RARITY = PixelPetRarity.COMMON;
 
@@ -63,8 +64,8 @@ public record PixelPetData(
             ResourceLocation.CODEC.optionalFieldOf("animation_id", DEFAULT_ANIMATION_ID)
                     .forGetter(PixelPetData::animationId),
 
-            Codec.BOOL.optionalFieldOf("attacking", DEFAULT_ATTACKING)
-                    .forGetter(PixelPetData::attacking),
+            LeveledAttackData.CODEC.optionalFieldOf("attack", DEFAULT_ATTACK)
+                    .forGetter(PixelPetData::attack),
 
             ExtraCodecs.intRange(1, 100).optionalFieldOf("tame_chance", DEFAULT_TAME_CHANCE)
                     .forGetter(PixelPetData::tameChance),
@@ -80,7 +81,7 @@ public record PixelPetData(
                             r -> Optional.of(r.name().toLowerCase()))
                     .forGetter(PixelPetData::rarity)
 
-            ).apply(instance, (entityType,genericName, tameItem, baseHealth, animationId, attacking, tameChance, scares, rarity) -> {
+            ).apply(instance, (entityType,genericName, tameItem, baseHealth, animationId, attack, tameChance, scares, rarity) -> {
                 return new PixelPetData(
                         null,
                         entityType,
@@ -88,7 +89,7 @@ public record PixelPetData(
                         tameItem,
                         baseHealth,
                         animationId,
-                        attacking,
+                        attack,
                         tameChance,
                         scares,
                         rarity

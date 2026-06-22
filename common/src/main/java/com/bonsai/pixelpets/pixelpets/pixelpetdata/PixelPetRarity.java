@@ -1,4 +1,4 @@
-package com.bonsai.pixelpets.pixelpets;
+package com.bonsai.pixelpets.pixelpets.pixelpetdata;
 
 import net.minecraft.util.StringRepresentable;
 

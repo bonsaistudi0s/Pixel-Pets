@@ -52,7 +52,7 @@ public class PixelPetsInventory {
         }
 
         compoundTag.put("Pets", listTag);
-        compoundTag.putString("Status", this.petStatus.name());
+        compoundTag.putString("Status", this.petStatus.getSerializedName());
         return compoundTag;
     }
 
@@ -80,12 +80,7 @@ public class PixelPetsInventory {
         }
 
         if (compoundTag.contains("Status")) {
-            try {
-                this.petStatus = PixelPetStatus.valueOf(compoundTag.getString("Status"));
-            } catch (IllegalArgumentException e) {
-                PixelPets.LOGGER.warn("Unknown PixelPetStatus '{}', defaulting to PASSIVE", compoundTag.getString("Status"));
-                this.petStatus = PixelPetStatus.PASSIVE;
-            }
+            this.petStatus = PixelPetStatus.byName(compoundTag.getString("Status"));
         }
     }
 

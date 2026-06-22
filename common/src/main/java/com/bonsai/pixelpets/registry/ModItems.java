@@ -61,7 +61,7 @@ public class ModItems {
 
     /// BINDER
     public static void registerTabs(BiConsumer<CreativeModeTab, ResourceLocation> consumer) {
-        consumer.accept(PIXEL_PETS_TAB, ResourceLocation.fromNamespaceAndPath(PixelPets.MOD_ID, "pixelpets_tab"));
+        consumer.accept(PIXEL_PETS_TAB, PixelPets.identifier("pixelpets_tab"));
     }
 
 

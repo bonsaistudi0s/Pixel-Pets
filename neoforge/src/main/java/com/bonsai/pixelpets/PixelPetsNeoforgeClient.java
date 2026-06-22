@@ -21,7 +21,9 @@ public class PixelPetsNeoforgeClient {
         //event.registerBlockEntityRenderer();
 
         // Entity renderers
-        event.registerEntityRenderer(ModEntities.DEFAULT_PET, AbstractPixelPetRenderer::new);
+        event.registerEntityRenderer(ModEntities.WALKING_PET, AbstractPixelPetRenderer::new);
+        event.registerEntityRenderer(ModEntities.SWIMMING_PET, AbstractPixelPetRenderer::new);
+        event.registerEntityRenderer(ModEntities.AMPHIBIOUS_PET, AbstractPixelPetRenderer::new);
 
         // Projectile renderers
         //event.registerEntityRenderer();

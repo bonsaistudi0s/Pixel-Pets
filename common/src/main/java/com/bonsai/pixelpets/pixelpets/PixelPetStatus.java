@@ -1,5 +1,6 @@
 package com.bonsai.pixelpets.pixelpets;
 
+import com.bonsai.pixelpets.PixelPets;
 import net.minecraft.util.StringRepresentable;
 
 public enum PixelPetStatus implements StringRepresentable {
@@ -18,9 +19,13 @@ public enum PixelPetStatus implements StringRepresentable {
         return this.name;
     }
 
-    // Nullable
     public static PixelPetStatus byName(String name) {
-        return CODEC.byName(name);
+        PixelPetStatus result = CODEC.byName(name);
+        if (result == null) {
+            PixelPets.LOGGER.warn("Unknown PixelPetStatus '{}', defaulting to PASSIVE", name);
+            return PixelPetStatus.PASSIVE;
+        }
+        return result;
     }
 
     public String toString() {

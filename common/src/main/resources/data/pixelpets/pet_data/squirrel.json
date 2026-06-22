@@ -1,0 +1,31 @@
+{
+  "entity_type": "pixelpets:walking_pet",
+  "generic_name": "Squirrel",
+  "tame_item": "minecraft:sweet_berries",
+  "base_health": 16,
+  "attack": {
+    "1": {
+      "damage": 0,
+      "status_effects": [
+        {
+          "effect": "minecraft:poison",
+          "amplifier": 2
+        }
+      ]
+    },
+    "3": {
+      "projectile": "minecraft:snowball",
+      "status_effects": [
+        {
+          "effect": "minecraft:glowing"
+        }
+      ]
+    },
+    "5": {
+      "damage": 1,
+      "cooldown": 5,
+      "range": 15,
+      "projectile": "minecraft:snowball"
+    }
+  }
+}
