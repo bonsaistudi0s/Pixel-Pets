@@ -1,6 +1,8 @@
 package com.bonsai.pixelpets.entities;
 
 import com.bonsai.pixelpets.PixelPets;
+import com.bonsai.pixelpets.entities.goals.PixelPetMeleeAttackGoal;
+import com.bonsai.pixelpets.entities.goals.PixelPetRangedAttackGoal;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.pixelpetdata.LeveledAttackData;
 import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetData;
@@ -14,10 +16,9 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -26,7 +27,6 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
-import net.minecraft.world.entity.ai.navigation.*;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
@@ -34,9 +34,8 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -45,22 +44,19 @@ import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 
-// TODO Handle name displayed on death
 public abstract class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity, RangedAttackMob {
-
     /// Geckolib </br>
     /// DevNote: Make sure the animations in *.animation.json match the form below
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     public static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.walk");
     public static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.run");
     public static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.idle");
-    public static final RawAnimation SIT = RawAnimation.begin().thenLoop("animation.sit");
+    public static final RawAnimation SIT = RawAnimation.begin().thenLoop("animation.sit");      // TODO make pets sit/sleep if idle for long enough?
     public static final RawAnimation SLEEPING = RawAnimation.begin().thenLoop("animation.sleeping");
     public static final RawAnimation SWIM = RawAnimation.begin().thenLoop("animation.swim");
     public static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.attack");
@@ -72,7 +68,9 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
                 new AnimationController<>(this, "Swim", 0,
                         (state) -> this.isSwimming() ? state.setAndContinue(SWIM) : PlayState.STOP),
                 new AnimationController<>(this, "Walk/Run/Idle", 0,
-                        (state) -> state.isMoving() ? state.setAndContinue(this.isSprinting() ? RUN : WALK) : state.setAndContinue(IDLE))
+                        (state) -> state.isMoving() ? state.setAndContinue(this.isSprinting() ? RUN : WALK) : state.setAndContinue(IDLE)),
+                new AnimationController<>(this,"Attack", 0,
+                        (animTest) -> PlayState.STOP).triggerableAnim("attack", ATTACK)
         );
     }
     @Override
@@ -95,6 +93,8 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     private PixelPetStatus status = PixelPetStatus.PASSIVE;
     private LeveledAttackData.PixelPetAttackData currentAttack = null;
     private EntityType<Projectile> projectile = null;
+
+    @Nullable
     private Goal currentAttackGoal = null;
 
     private Goal activeTargetingGoal = null;
@@ -160,7 +160,6 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         // TODO other stuff that changes with level
     }
 
-    // TODO might need to make range an Attribute, so other pets can buff it
     private void refreshAttack() {
         LeveledAttackData.PixelPetAttackData resolved = getData().flatMap(data -> data.attack().resolve(this.abilityLevel)).orElse(null);
 
@@ -173,7 +172,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
             // Range affect melee and ranged attacks, but the scale and defaults for those are very different
             // Defaulted to NEG_INF in LeveledAttackData, true default applied here
-            AttributeInstance rangeAttr = this.getAttribute(ModAttributes.RANGE);
+            AttributeInstance rangeAttr = this.getAttribute(ModAttributes.RANGE.holder());
             if (rangeAttr != null) {
                 float r = resolved.range();
                 if (r < 0.0f) r = (resolved.isRanged() ? 10.0f : 0.0f);
@@ -271,7 +270,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     }
 
     public float getRange() {
-        AttributeInstance rangeAttr = this.getAttribute(ModAttributes.RANGE);
+        AttributeInstance rangeAttr = this.getAttribute(ModAttributes.RANGE.holder());
         return (rangeAttr != null) ? (float) rangeAttr.getValue() : (this.currentAttack.isRanged() ? 10.0f : 0.0f);
     }
 
@@ -297,12 +296,12 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
                 // Replaced later with PixelPetData value
                 .add(Attributes.MAX_HEALTH, 8)
                 .add(Attributes.ATTACK_DAMAGE, 4)
-                .add(ModAttributes.RANGE, 0.0f)         // Controls melee and ranged range, default applies to melee
+                .add(ModAttributes.RANGE.holder(), 0.0f)         // Controls melee and ranged range, default applies to melee
                 .add(Attributes.ATTACK_SPEED, 20)       // # ticks until can attack again
 
                 // Normal
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
-                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.7f)
+                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.75f)
                 .add(Attributes.FOLLOW_RANGE, 10);
     }
 
@@ -447,380 +446,13 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
                 }
             }
         }
+        triggerAnim("Attack", "attack");
         return super.doHurtTarget(entity);
     }
-
-    /// Attack Goals
-
-    public static class PixelPetMeleeAttackGoal extends Goal {
-        protected final AbstractPixelPetEntity mob;
-        private Path path;
-        private double pathedTargetX;
-        private double pathedTargetY;
-        private double pathedTargetZ;
-        private int ticksUntilNextPathRecalculation;
-        private int ticksUntilNextAttack;
-        private long lastCanUseCheck;
-
-        public PixelPetMeleeAttackGoal(AbstractPixelPetEntity mob) {
-            this.mob = mob;
-            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
-        }
-
-        public boolean canUse() {
-            long i = this.mob.level().getGameTime();
-            if (i - this.lastCanUseCheck < 20L) {
-                return false;
-            } else {
-                this.lastCanUseCheck = i;
-                LivingEntity livingentity = this.mob.getTarget();
-                if (livingentity == null) {
-                    return false;
-                } else if (!livingentity.isAlive()) {
-                    return false;
-                } else {
-                    this.path = this.mob.getNavigation().createPath(livingentity, 0);
-                    return this.path != null ? true : this.mob.isWithinMeleeAttackRange(livingentity);
-                }
-            }
-        }
-
-        public boolean canContinueToUse() {
-            LivingEntity livingentity = this.mob.getTarget();
-            if (livingentity == null) {
-                return false;
-            } else if (!livingentity.isAlive()) {
-                return false;
-            } else {
-                return !this.mob.isWithinRestriction(livingentity.blockPosition()) ? false : !(livingentity instanceof Player) || !livingentity.isSpectator() && !((Player)livingentity).isCreative();
-            }
-        }
-
-        public void start() {
-            this.mob.getNavigation().moveTo(this.path, 1.0);
-            this.mob.setAggressive(true);
-            this.ticksUntilNextPathRecalculation = 0;
-            this.ticksUntilNextAttack = 0;
-        }
-
-        public void stop() {
-            LivingEntity livingentity = this.mob.getTarget();
-            if (!EntitySelector.NO_CREATIVE_OR_SPECTATOR.test(livingentity)) {
-                this.mob.setTarget(null);
-            }
-
-            this.mob.setAggressive(false);
-            this.mob.getNavigation().stop();
-        }
-
-        public boolean requiresUpdateEveryTick() {
-            return true;
-        }
-
-        public void tick() {
-            LivingEntity livingentity = this.mob.getTarget();
-            if (livingentity != null) {
-                this.mob.getLookControl().setLookAt(livingentity, 30.0F, 30.0F);
-                this.ticksUntilNextPathRecalculation = Math.max(this.ticksUntilNextPathRecalculation - 1, 0);
-                if (this.ticksUntilNextPathRecalculation <= 0 && (this.pathedTargetX == (double)0.0F && this.pathedTargetY == (double)0.0F && this.pathedTargetZ == (double)0.0F || livingentity.distanceToSqr(this.pathedTargetX, this.pathedTargetY, this.pathedTargetZ) >= (double)1.0F || this.mob.getRandom().nextFloat() < 0.05F)) {
-                    this.pathedTargetX = livingentity.getX();
-                    this.pathedTargetY = livingentity.getY();
-                    this.pathedTargetZ = livingentity.getZ();
-                    this.ticksUntilNextPathRecalculation = 4 + this.mob.getRandom().nextInt(7);
-                    double d0 = this.mob.distanceToSqr(livingentity);
-                    if (d0 > (double)1024.0F) {
-                        this.ticksUntilNextPathRecalculation += 10;
-                    } else if (d0 > (double)256.0F) {
-                        this.ticksUntilNextPathRecalculation += 5;
-                    }
-
-                    if (!this.mob.getNavigation().moveTo(livingentity, 1.0f)) {
-                        this.ticksUntilNextPathRecalculation += 15;
-                    }
-
-                    this.ticksUntilNextPathRecalculation = this.adjustedTickDelay(this.ticksUntilNextPathRecalculation);
-                }
-
-                this.ticksUntilNextAttack = Math.max(this.ticksUntilNextAttack - 1, 0);
-                this.checkAndPerformAttack(livingentity);
-            }
-
-        }
-
-        protected void checkAndPerformAttack(LivingEntity target) {
-            if (this.canPerformAttack(target)) {
-                this.resetAttackCooldown();
-                this.mob.swing(InteractionHand.MAIN_HAND);
-                this.mob.doHurtTarget(target);
-            }
-
-        }
-
-        protected void resetAttackCooldown() {
-            this.ticksUntilNextAttack = this.adjustedTickDelay((int) this.mob.getAttackSpeed());
-        }
-
-        protected boolean isTimeToAttack() {
-            return this.ticksUntilNextAttack <= 0;
-        }
-
-        protected boolean canPerformAttack(LivingEntity entity) {
-            return this.isTimeToAttack() && this.mob.isWithinMeleeAttackRange(entity) && this.mob.getSensing().hasLineOfSight(entity);
-        }
-    }
-
-    public static class PixelPetRangedAttackGoal extends Goal {
-        private final AbstractPixelPetEntity mob;
-        private LivingEntity target;
-        private int attackTime;
-        private int seeTime;
-        public PixelPetRangedAttackGoal(AbstractPixelPetEntity rangedAttackMob) {
-            this.attackTime = -1;
-            this.mob = rangedAttackMob;
-            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
-        }
-
-        public boolean canUse() {
-            LivingEntity livingentity = this.mob.getTarget();
-            if (livingentity != null && livingentity.isAlive()) {
-                this.target = livingentity;
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        public boolean canContinueToUse() {
-            return this.canUse() || this.target.isAlive() && !this.mob.getNavigation().isDone();
-        }
-
-        public void stop() {
-            this.target = null;
-            this.seeTime = 0;
-            this.attackTime = -1;
-        }
-
-        public boolean requiresUpdateEveryTick() {
-            return true;
-        }
-
-        public void tick() {
-            double d0 = this.mob.distanceToSqr(this.target.getX(), this.target.getY(), this.target.getZ());
-            boolean flag = this.mob.getSensing().hasLineOfSight(this.target);
-            if (flag) {
-                ++this.seeTime;
-            } else {
-                this.seeTime = 0;
-            }
-
-            if (!(d0 > (double)(this.mob.getRange() * this.mob.getRange())) && this.seeTime >= 5) {
-                this.mob.getNavigation().stop();
-            } else {
-                this.mob.getNavigation().moveTo(this.target, 1.0f);
-            }
-
-            this.mob.getLookControl().setLookAt(this.target, 30.0F, 30.0F);
-            if (--this.attackTime == 0) {
-                if (!flag) {
-                    return;
-                }
-
-                float f = (float)Math.sqrt(d0) / this.mob.getRange();
-                float f1 = Mth.clamp(f, 0.1F, 1.0F);
-                this.mob.performRangedAttack(this.target, f1);
-            }
-
-            if (this.attackTime <= 0) {
-                this.attackTime = (int) this.mob.getAttackSpeed();
-            }
-
-        }
-    }
-
-
-    /// Movement Goals
 
     @Override
     public void updateSwimming() {
         this.setSwimming(this.isInWater() && !this.isPassenger());
     }
 
-    public static class GentleFloatGoal extends FloatGoal {
-        private final Mob mob;
-
-        public GentleFloatGoal(Mob mob) {
-            super(mob);
-            this.mob = mob;
-        }
-
-        @Override
-        public void tick() {
-            if (this.mob.isInLava()) {
-                if (this.mob.getRandom().nextFloat() < 0.8F) {
-                    this.mob.getJumpControl().jump();
-                }
-            } else {
-                Vec3 motion = this.mob.getDeltaMovement();
-
-                double fluidHeight = this.mob.getFluidHeight(FluidTags.WATER);
-                double targetSubmersion = 0.1f;
-
-                double diff = fluidHeight - targetSubmersion;
-
-                double correction = Math.clamp(diff * 0.2D, -0.04D, 0.04D);
-
-                this.mob.setDeltaMovement(motion.x, motion.y + correction, motion.z);
-            }
-        }
-    }
-
-    // TODO test with flying
-    public static class DefaultFollowOwnerGoal extends Goal {
-        private final TamableAnimal tamable;
-        private LivingEntity owner;
-        private final double speedModifier;
-        private final PathNavigation navigation;
-        private int timeToRecalcPath;
-        private final float stopDistance;
-        private final float startDistance;
-
-        public DefaultFollowOwnerGoal(TamableAnimal tamable, double speedModifier, float startDistance, float stopDistance) {
-            this.tamable = tamable;
-            this.speedModifier = speedModifier;
-            this.navigation = tamable.getNavigation();
-            this.startDistance = startDistance;
-            this.stopDistance = stopDistance;
-            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
-            if (!(this.navigation instanceof GroundPathNavigation)
-                    && !(this.navigation instanceof FlyingPathNavigation)
-                    && !(this.navigation instanceof AmphibiousPathNavigation)) {
-                throw new IllegalArgumentException("Unsupported navigation type for DefaultFollowOwnerGoal");
-            }
-        }
-
-        public boolean canUse() {
-            LivingEntity livingentity = this.tamable.getOwner();
-            if (livingentity == null) {
-                return false;
-            } else if (this.tamable.unableToMoveToOwner()) {
-                return false;
-            } else if (this.tamable.isInWater()) {
-                return false;
-            } else if (this.tamable.distanceToSqr(livingentity) < (double)(this.startDistance * this.startDistance)) {
-                return false;
-            } else {
-                this.owner = livingentity;
-                return true;
-            }
-        }
-
-        public boolean canContinueToUse() {
-            if (this.navigation.isDone()) {
-                return false;
-            } else if (this.tamable.isInWater()) {
-                return false;
-            } else {
-                return this.tamable.unableToMoveToOwner() ? false : !(this.tamable.distanceToSqr(this.owner) <= (double)(this.stopDistance * this.stopDistance));
-            }
-        }
-
-        public void start() {
-            this.timeToRecalcPath = 0;
-        }
-
-        public void stop() {
-            this.owner = null;
-            this.navigation.stop();
-        }
-
-        public void tick() {
-            boolean flag = this.tamable.shouldTryTeleportToOwner();
-            if (!flag) {
-                this.tamable.getLookControl().setLookAt(this.owner, 10.0F, (float)this.tamable.getMaxHeadXRot());
-            }
-
-            if (--this.timeToRecalcPath <= 0) {
-                this.timeToRecalcPath = this.adjustedTickDelay(10);
-                if (flag) {
-                    this.tamable.tryToTeleportToOwner();
-                } else {
-                    this.navigation.moveTo(this.owner, this.speedModifier);
-                }
-            }
-        }
-    }
-
-    public static class SwimFollowOwnerGoal extends Goal {
-        private final TamableAnimal tamable;
-        private LivingEntity owner;
-        private final double speedModifier;
-        private final PathNavigation navigation;
-        private int timeToRecalcPath;
-        private final float stopDistance;
-        private final float startDistance;
-
-        public SwimFollowOwnerGoal(TamableAnimal tamable, double speedModifier, float startDistance, float stopDistance) {
-            this.tamable = tamable;
-            this.speedModifier = speedModifier;
-            this.navigation = tamable.getNavigation();
-            this.startDistance = startDistance;
-            this.stopDistance = stopDistance;
-            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
-            if (!(this.navigation instanceof WaterBoundPathNavigation)
-                    && !(this.navigation instanceof AmphibiousPathNavigation)) {
-                throw new IllegalArgumentException("Unsupported navigation type for SwimFollowOwnerGoal");
-            }
-        }
-
-        public boolean canUse() {
-            LivingEntity livingentity = this.tamable.getOwner();
-            if (livingentity == null) {
-                return false;
-            } else if (this.tamable.unableToMoveToOwner()) {
-                return false;
-            } else if (!this.tamable.isInWater()) {
-                return false;
-            } else if (this.tamable.distanceToSqr(livingentity) < (double)(this.startDistance * this.startDistance)) {
-                return false;
-            } else {
-                this.owner = livingentity;
-                return true;
-            }
-        }
-
-        public boolean canContinueToUse() {
-            if (this.navigation.isDone()) {
-                return false;
-            } else if (!this.tamable.isInWater()) {
-                return false;
-            } else {
-                return !this.tamable.unableToMoveToOwner() && !(this.tamable.distanceToSqr(this.owner) <= (double) (this.stopDistance * this.stopDistance));
-            }
-        }
-
-        public void start() {
-            this.timeToRecalcPath = 0;
-        }
-
-        public void stop() {
-            this.owner = null;
-            this.navigation.stop();
-        }
-
-        public void tick() {
-            boolean flag = this.tamable.shouldTryTeleportToOwner();
-            if (!flag) {
-                this.tamable.getLookControl().setLookAt(this.owner, 10.0F, (float)this.tamable.getMaxHeadXRot());
-            }
-
-            if (--this.timeToRecalcPath <= 0) {
-                this.timeToRecalcPath = this.adjustedTickDelay(10);
-                if (flag) {
-                    this.tamable.tryToTeleportToOwner();
-                } else {
-                    this.navigation.moveTo(this.owner, this.speedModifier);
-                }
-            }
-        }
-    }
 }

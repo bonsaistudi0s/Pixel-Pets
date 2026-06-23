@@ -24,6 +24,11 @@ dependencies {
 
     // Geckolib
     compileOnly "software.bernie.geckolib:geckolib-common-${minecraft_version}:${geckolib_version}"
+
+    // RLib
+    // common seems to be unsuited for this multi-loader approach
+    //compileOnly "com.teamresourceful.resourcefullib:resourcefullib-common-${resourcefullib_version}"
+    compileOnly "com.teamresourceful.resourcefullib:resourcefullib-neoforge-${resourcefullib_version}"
 }
 
 configurations {

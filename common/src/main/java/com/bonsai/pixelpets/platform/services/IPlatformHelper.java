@@ -48,7 +48,5 @@ public interface IPlatformHelper {
         return isDevelopmentEnvironment() ? "development" : "production";
     }
 
-    CreativeModeTab.Builder tabBuilder();
-    <T extends BlockEntity> BlockEntityType<T> blockEntityType(BiFunction<BlockPos, BlockState, T> function, Block... validBlocks);
     SimpleParticleType simpleParticleType();
 }

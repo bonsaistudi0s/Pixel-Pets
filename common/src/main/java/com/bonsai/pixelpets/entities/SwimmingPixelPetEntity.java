@@ -1,5 +1,6 @@
 package com.bonsai.pixelpets.entities;
 
+import com.bonsai.pixelpets.entities.goals.SwimFollowOwnerGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.EntityType;

@@ -41,15 +41,6 @@ public class ForgePlatformHelper implements IPlatformHelper {
         return !FMLLoader.isProduction();
     }
 
-    @Override
-    public CreativeModeTab.Builder tabBuilder() {
-        return CreativeModeTab.builder();
-    }
-
-    @Override
-    public <T extends BlockEntity> BlockEntityType<T> blockEntityType(BiFunction<BlockPos, BlockState, T> function, Block... validBlocks) {
-        return BlockEntityType.Builder.of(function::apply, validBlocks).build(DSL.remainderType());
-    }
 
     @Override
     public SimpleParticleType simpleParticleType() {

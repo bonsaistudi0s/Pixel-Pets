@@ -6,7 +6,8 @@
   "compatibilityLevel": "JAVA_18",
   "mixins": [
     "PlayerMixin",
-    "ProjectileMixin"
+    "ProjectileMixin",
+    "TamableAnimalMixin"
   ],
   "client": [
   ],

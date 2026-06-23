@@ -29,29 +29,34 @@ public class ProjectileMixin {
     @Shadow
     private UUID ownerUUID;
 
+    // TODO untestable until petInventory implemented
     @Inject(method = "canHitEntity", at = @At("HEAD"), cancellable = true)
     protected void canHitEntity(Entity target, CallbackInfoReturnable<Boolean> cir) {
         Projectile self = (Projectile) (Object) this;
 
-        if (!(self.getOwner() instanceof AbstractPixelPetEntity pixelPet)) {
-            return;
-        }
+        // Prevent pet projectiles from hitting their owner or friends
+        if ((self.getOwner() instanceof AbstractPixelPetEntity pixelPet)) {
+            UUID ownerUUID = pixelPet.getOwnerUUID();
+            if (ownerUUID == null) {
+                return;
+            }
 
-        UUID ownerUUID = pixelPet.getOwnerUUID();
-        if (ownerUUID == null) {
-            return;
-        }
-
-        if (target.getUUID().equals(ownerUUID)) {
-            cir.setReturnValue(false);
-            return;
-        }
-
-        Player ownerOwner = self.level().getPlayerByUUID(pixelPet.getOwnerUUID());
-        if (ownerOwner != null) {
-            if ((((PlayerPetAccess) ownerOwner).pixelPets$getActivePets()).contains(target.getUUID())) {
+            if (target.getUUID().equals(ownerUUID)) {
                 cir.setReturnValue(false);
                 return;
+            }
+
+            Player ownerOwner = self.level().getPlayerByUUID(ownerUUID);
+            if (ownerOwner != null) {
+                if ((((PlayerPetAccess) ownerOwner).pixelPets$getActivePets()).contains(target.getUUID())) {
+                    cir.setReturnValue(false);
+                }
+            }
+
+        // Prevent player projectiles from hitting their pets // TODO uncertain if this should be added
+        } else if (self.getOwner() instanceof Player player) {
+            if ((((PlayerPetAccess) player).pixelPets$getActivePets()).contains(target.getUUID())) {
+                cir.setReturnValue(false);
             }
         }
     }

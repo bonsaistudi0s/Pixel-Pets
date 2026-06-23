@@ -1,5 +1,9 @@
 package com.bonsai.pixelpets.entities;
 
+import com.bonsai.pixelpets.entities.goals.AmphibiousFollowOwnerGoal;
+import com.bonsai.pixelpets.entities.goals.AmphibiousStrollGoal;
+import com.bonsai.pixelpets.entities.goals.DefaultFollowOwnerGoal;
+import com.bonsai.pixelpets.entities.goals.SwimFollowOwnerGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
@@ -7,12 +11,9 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.ai.control.MoveControl;
-import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
@@ -20,7 +21,6 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
-import net.minecraft.world.phys.Vec3;
 
 public class AmphibiousPixelPetEntity extends AbstractPixelPetEntity{
     public AmphibiousPixelPetEntity(EntityType<? extends TamableAnimal> entityType, Level level) {
@@ -32,8 +32,7 @@ public class AmphibiousPixelPetEntity extends AbstractPixelPetEntity{
     @Override
     protected void registerGoals() {
         super.registerGoals();
-        this.goalSelector.addGoal(6, new DefaultFollowOwnerGoal(this, 1.0f, 6.0f, 1.5f));
-        this.goalSelector.addGoal(6, new SwimFollowOwnerGoal(this, 1.5f, 6.0f, 1.5f));
+        this.goalSelector.addGoal(6, new AmphibiousFollowOwnerGoal(this, 1.0f, 1.2f, 6.0f, 1.5f));
         this.goalSelector.addGoal(10, new AmphibiousStrollGoal(this, 1.0f));
     }
 
@@ -129,17 +128,4 @@ public class AmphibiousPixelPetEntity extends AbstractPixelPetEntity{
         }
     }
 
-    public static class AmphibiousStrollGoal extends RandomStrollGoal {
-
-        public AmphibiousStrollGoal(PathfinderMob mob, double speedModifier) {
-            super(mob, speedModifier, 40);
-        }
-
-        protected Vec3 getPosition() {
-            if (this.mob.isInWater()) {
-                return BehaviorUtils.getRandomSwimmablePos(this.mob, 10, 7);
-            }
-            return super.getPosition();
-        }
-    }
 }

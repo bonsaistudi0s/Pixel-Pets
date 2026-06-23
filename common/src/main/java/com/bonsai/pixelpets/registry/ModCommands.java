@@ -1,6 +1,5 @@
 package com.bonsai.pixelpets.registry;
 
-import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetData;

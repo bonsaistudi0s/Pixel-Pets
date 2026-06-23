@@ -1,46 +1,16 @@
 package com.bonsai.pixelpets.registry;
 
 import com.bonsai.pixelpets.PixelPets;
-import com.bonsai.pixelpets.platform.Services;
-import com.mojang.serialization.MapCodec;
-import net.minecraft.core.particles.ColorParticleOption;
+import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistries;
+import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistry;
 import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
-
-import java.util.LinkedHashMap;
-import java.util.function.BiConsumer;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 public class ModParticles {
 
-    public static final LinkedHashMap<String, ParticleType<?>> REGISTERED_PARTICLES = new LinkedHashMap<>();
+    public static final ResourcefulRegistry<ParticleType<?>> PARTICLE_TYPES = ResourcefulRegistries.create(BuiltInRegistries.PARTICLE_TYPE, PixelPets.MOD_ID);
 
-    private static SimpleParticleType registerSimple(String name) {
-        var simpleParticleType = Services.PLATFORM.simpleParticleType();
-        REGISTERED_PARTICLES.put(name, simpleParticleType);
-        return simpleParticleType;
-    }
+    // example:
+    //public static final RegistryEntry<SimpleParticleType> SIMPLE = PARTICLE_TYPES.register("totem_of_freezing", Services.PLATFORM::simpleParticleType);
 
-    private static ParticleType<ColorParticleOption> registerTinted(String name) {
-        var colorParticleType = new ParticleType<ColorParticleOption>(false) {
-            @Override
-            public MapCodec<ColorParticleOption> codec() {
-                return ColorParticleOption.codec(this);
-            }
-            @Override
-            public StreamCodec<? super RegistryFriendlyByteBuf, ColorParticleOption> streamCodec() {
-                return ColorParticleOption.streamCodec(this);
-            }
-        };
-
-        REGISTERED_PARTICLES.put(name, colorParticleType);
-        return colorParticleType;
-    }
-
-    /// BINDER
-    public static void register(BiConsumer<ParticleType<?>, ResourceLocation> consumer) {
-        REGISTERED_PARTICLES.forEach((key, value) -> consumer.accept(value, PixelPets.identifier(key)));
-    }
 }

@@ -16,21 +16,30 @@ description = '''${description}''' #mandatory (Supports multiline text)
 config = "${mod_id}.mixins.json"
 [[mixins]]
 config = "${mod_id}.neoforge.mixins.json"
+
 [[dependencies.pixelpets]] #optional
 modId = "neoforge" #mandatory
 type="required" #mandatory (Can be one of "required", "optional", "incompatible" or "discouraged")
 versionRange = "[${neoforge_version},)" #mandatory
 ordering = "NONE" # The order that this dependency should load in relation to your mod, required to be either 'BEFORE' or 'AFTER' if the dependency is not mandatory
 side = "BOTH" # Side this dependency is applied on - 'BOTH', 'CLIENT' or 'SERVER'
+
 [[dependencies.pixelpets]]
 modId = "minecraft"
 type="required" #mandatory (Can be one of "required", "optional", "incompatible" or "discouraged")
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+
 [[dependencies.pixelpets]]
 modId = "geckolib"
 type="required" #mandatory (Can be one of "required", "optional", "incompatible" or "discouraged")
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.pixelpets]]
+modId = "resourcefullib"
+type = "required"
 ordering = "NONE"
 side = "BOTH"
 

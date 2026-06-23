@@ -11,9 +11,9 @@ public class PixelPetsFabricClient implements ClientModInitializer {
     public void onInitializeClient() {
 
         // Entities
-        EntityRendererRegistry.register(ModEntities.WALKING_PET, AbstractPixelPetRenderer::new);
-        EntityRendererRegistry.register(ModEntities.SWIMMING_PET, AbstractPixelPetRenderer::new);
-        EntityRendererRegistry.register(ModEntities.AMPHIBIOUS_PET, AbstractPixelPetRenderer::new);
+        EntityRendererRegistry.register(ModEntities.WALKING_PET.get(), AbstractPixelPetRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SWIMMING_PET.get(), AbstractPixelPetRenderer::new);
+        EntityRendererRegistry.register(ModEntities.AMPHIBIOUS_PET.get(), AbstractPixelPetRenderer::new);
 
     }
 

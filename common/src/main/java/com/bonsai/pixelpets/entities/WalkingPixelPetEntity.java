@@ -1,5 +1,7 @@
 package com.bonsai.pixelpets.entities;
 
+import com.bonsai.pixelpets.entities.goals.DefaultFollowOwnerGoal;
+import com.bonsai.pixelpets.entities.goals.GentleFloatGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.TamableAnimal;

@@ -53,6 +53,7 @@ repositories {
         name = 'BlameJared'
         url = 'https://maven.blamejared.com'
     }
+    maven { url = "https://maven.teamresourceful.com/repository/maven-public/" }
 }
 
 // Declare capabilities on the outgoing configurations.

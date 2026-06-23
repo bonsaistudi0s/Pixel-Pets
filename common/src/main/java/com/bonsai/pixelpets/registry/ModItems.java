@@ -1,73 +1,40 @@
 package com.bonsai.pixelpets.registry;
 
 import com.bonsai.pixelpets.PixelPets;
-import com.bonsai.pixelpets.platform.Services;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
+import com.teamresourceful.resourcefullib.common.item.tabs.ResourcefulCreativeModeTab;
+import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistries;
+import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 
-import java.util.LinkedHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ModItems {
 
-    // ITEMS
-    public static final LinkedHashMap<String, Item> REGISTERED_ITEMS = new LinkedHashMap<>();
+    /// ITEMS
 
-    private static ResourceKey<Item> vanillaItemId(String name) {
-        return ResourceKey.create(Registries.ITEM, PixelPets.identifier(name));
-    }
+    public static final ResourcefulRegistry<Item> ITEMS = ResourcefulRegistries.create(BuiltInRegistries.ITEM, PixelPets.MOD_ID);
 
-    public static Item registerItem(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
-        return registerItem(vanillaItemId(name), factory, properties);
-    }
+    // example item:
+    // public static final Supplier<SpawnEggItem> JUNGLE_SPAWN_EGG = ITEMS.register("jungle_creeper_spawn_egg", () -> createSpawnEgg(
+    //            ModEntities.JUNGLE_CREEPER, 0x507541, 0x59461A, new Item.Properties()));
 
-    public static Item registerSpawnEgg(String name, EntityType<? extends Mob> entityType) {
-        return registerItem(vanillaItemId(name), (properties -> new SpawnEggItem(entityType, 0xFFFFFF, 0xFFFFFF, properties)));
-    }
-
-    public static Item registerItem(ResourceKey<Item> key, Function<Item.Properties, Item> factory) {
-        return registerItem(key, factory, new Item.Properties());
-    }
-
-    public static Item registerItem(ResourceKey<Item> key, Function<Item.Properties, Item> factory, Item.Properties properties) {
-        var item = factory.apply(properties);
-        REGISTERED_ITEMS.put(key.location().getPath(), item);
-
-        return item;
-    }
-
-    /// BINDER
-    public static void registerItems(BiConsumer<Item, ResourceLocation> consumer) {
-        REGISTERED_ITEMS.forEach((key, value) -> consumer.accept(value, PixelPets.identifier(key)));
-    }
+    // example block item:
+    // public static final Supplier<Item> TINY_CACTUS =  ITEMS.register("tiny_cactus", () -> new BlockItem(ModBlocks.TINY_CACTUS.get(), new Item.Properties()));
 
 
-    // TAB
-    public static final CreativeModeTab PIXEL_PETS_TAB = Services.PLATFORM.tabBuilder()
-            .icon(() -> new ItemStack(Items.NAME_TAG)) // TODO
-            .title(Component.translatable("itemGroup.pixelpets"))
-            .displayItems((itemDisplayParameters, output) -> {
-                ModItems.REGISTERED_ITEMS.forEach((s, item) -> output.accept(item));
-                ModBlocks.REGISTERED_BLOCK_ITEMS.forEach((s, item) -> output.accept(item));
-            }).build();
-
-    /// BINDER
-    public static void registerTabs(BiConsumer<CreativeModeTab, ResourceLocation> consumer) {
-        consumer.accept(PIXEL_PETS_TAB, PixelPets.identifier("pixelpets_tab"));
-    }
 
 
-    // RECIPES
+    /// CREATIVE TABS
 
-    /// BINDER
-    public static void registerRecipes(BiConsumer<RecipeSerializer<?>, ResourceLocation> consumer) {
-    }
+    public static final ResourcefulRegistry<CreativeModeTab> CREATIVE_TABS = ResourcefulRegistries.create(BuiltInRegistries.CREATIVE_MODE_TAB, PixelPets.MOD_ID);
+
+    public static final Supplier<CreativeModeTab> PIXEL_PETS = CREATIVE_TABS.register("item_group", () ->
+            new ResourcefulCreativeModeTab(PixelPets.identifier("item_group"))
+                    .setItemIcon(() -> Items.NAME_TAG) // TODO choose better item
+                    .addRegistry(ModItems.ITEMS)
+                    .build());
+
+    ///  RECIPES
+    // add later if relevant
 }

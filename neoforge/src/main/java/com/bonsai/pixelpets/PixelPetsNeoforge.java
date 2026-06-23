@@ -29,23 +29,6 @@ public class PixelPetsNeoforge {
 
         PixelPetsNeoforge.eventBus = eventBus;
 
-        ModAttributes.init();
-        bind(Registries.ATTRIBUTE, ModAttributes::registerAttributes);
-
-        bind(Registries.PARTICLE_TYPE, ModParticles::register);
-
-        bind(Registries.BLOCK, ModBlocks::registerBlocks);
-        bind(Registries.ITEM, ModBlocks::registerItems);
-
-        bind(Registries.BLOCK_ENTITY_TYPE, ModBlockEntities::register);
-
-        bind(Registries.ITEM, ModItems::registerItems);
-        bind(Registries.CREATIVE_MODE_TAB, ModItems::registerTabs);
-        bind(Registries.RECIPE_SERIALIZER, ModItems::registerRecipes);
-
-        bind(Registries.DATA_COMPONENT_TYPE, ModComponents::register);
-
-        bind(Registries.ENTITY_TYPE, ModEntities::register);
         eventBus.addListener(this::registerEntityAttributes);
         
         if (dist.isClient()) {
@@ -62,19 +45,11 @@ public class PixelPetsNeoforge {
 
     }
 
-    public static <T> void bind(ResourceKey<Registry<T>> registry, Consumer<BiConsumer<T, ResourceLocation>> source) {
-        eventBus.addListener((Consumer<RegisterEvent>) event -> {
-            if (registry.equals(event.getRegistryKey())) {
-                source.accept((t, rl) -> event.register(registry, rl, () -> t));
-            }
-        });
-    }
-
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         // TODO this is how I did entity attributes, might be an easier way in common?
-        event.put(ModEntities.WALKING_PET, AbstractPixelPetEntity.createAttributes().build());
-        event.put(ModEntities.SWIMMING_PET, AbstractPixelPetEntity.createAttributes().build());
-        event.put(ModEntities.AMPHIBIOUS_PET, AbstractPixelPetEntity.createAttributes().build());
+        event.put(ModEntities.WALKING_PET.get(), AbstractPixelPetEntity.createAttributes().build());
+        event.put(ModEntities.SWIMMING_PET.get(), AbstractPixelPetEntity.createAttributes().build());
+        event.put(ModEntities.AMPHIBIOUS_PET.get(), AbstractPixelPetEntity.createAttributes().build());
     }
 
     public void registerOnReloadMappings(AddReloadListenerEvent event) {

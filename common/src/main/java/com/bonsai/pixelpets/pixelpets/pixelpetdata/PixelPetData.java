@@ -18,11 +18,13 @@ import java.util.TreeMap;
 
 // TODO add spawning biome stuff?
 // TODO typing (on hold, joosh deciding)
+// TODO per sounds could be handled here
+// TODO emissive layers too, if necessary
 public record PixelPetData(
         ResourceLocation id,
         EntityType<AbstractPixelPetEntity> entityType,
         String genericName,
-        Item tameItem,
+        Item tameItem, // TODO accept item tags?
         int baseHealth,
         ResourceLocation animationId,
         LeveledAttackData attack,

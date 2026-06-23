@@ -22,20 +22,6 @@ public class PixelPetsForge {
     public PixelPetsForge(IEventBus modEventBus, Dist dist) {
         PixelPetsForge.eventBus = modEventBus;
 
-        bind(Registries.PARTICLE_TYPE, ModParticles::register);
-
-        bind(Registries.BLOCK, ModBlocks::registerBlocks);
-        bind(Registries.ITEM, ModBlocks::registerItems);
-
-        bind(Registries.BLOCK_ENTITY_TYPE, ModBlockEntities::register);
-
-        bind(Registries.ITEM, ModItems::registerItems);
-        bind(Registries.CREATIVE_MODE_TAB, ModItems::registerTabs);
-        bind(Registries.RECIPE_SERIALIZER, ModItems::registerRecipes);
-
-        bind(Registries.DATA_COMPONENT_TYPE, ModComponents::register);
-
-        bind(Registries.ENTITY_TYPE, ModEntities::register);
         eventBus.addListener(this::registerEntityAttributes);
 
         if (dist.isClient()) {
@@ -45,14 +31,6 @@ public class PixelPetsForge {
         }
 
         PixelPets.init();
-    }
-
-    public static <T> void bind(ResourceKey<Registry<T>> registry, Consumer<BiConsumer<T, ResourceLocation>> source) {
-        eventBus.addListener((Consumer<RegisterEvent>) event -> {
-            if (event.getRegistryKey().equals(registry)) {
-                source.accept((t, rl) -> event.register(registry, rl, () -> t));
-            }
-        });
     }
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
