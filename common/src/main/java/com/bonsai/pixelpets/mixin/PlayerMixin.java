@@ -16,7 +16,7 @@ import java.util.UUID;
 @Mixin(Player.class)
 public abstract class PlayerMixin implements PlayerPetAccess {
 
-    // TODO should despawn all pets on teleport
+    // TODO should despawn all pets on teleport and log out
 
     @Unique
     final PixelPetsInventory pixelPets$inventory = new PixelPetsInventory((Player) (Object) this); // FIXME needs testing, idk if player is accessible here

@@ -52,13 +52,13 @@ public class ProjectileMixin {
                     cir.setReturnValue(false);
                 }
             }
-
-        // Prevent player projectiles from hitting their pets // TODO uncertain if this should be added
-        } else if (self.getOwner() instanceof Player player) {
-            if ((((PlayerPetAccess) player).pixelPets$getActivePets()).contains(target.getUUID())) {
-                cir.setReturnValue(false);
-            }
         }
+        // Prevent player projectiles from hitting their pets // TODO uncertain if this should be added
+//        else if (self.getOwner() instanceof Player player) {
+//            if ((((PlayerPetAccess) player).pixelPets$getActivePets()).contains(target.getUUID())) {
+//                cir.setReturnValue(false);
+//            }
+//        }
     }
 
     @Inject(method = "onHitEntity", at = @At("TAIL"))

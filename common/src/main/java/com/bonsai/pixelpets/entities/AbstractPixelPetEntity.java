@@ -1,8 +1,8 @@
 package com.bonsai.pixelpets.entities;
 
-import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.goals.PixelPetMeleeAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRangedAttackGoal;
+import com.bonsai.pixelpets.entities.goals.PixelPetRestWhenOrderedToGoal;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.pixelpetdata.LeveledAttackData;
 import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetData;
@@ -18,7 +18,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -31,8 +30,8 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
@@ -56,19 +55,22 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     public static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.walk");
     public static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.run");
     public static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.idle");
-    public static final RawAnimation SIT = RawAnimation.begin().thenLoop("animation.sit");      // TODO make pets sit/sleep if idle for long enough?
+    public static final RawAnimation SIT = RawAnimation.begin().thenLoop("animation.sit");
     public static final RawAnimation SLEEPING = RawAnimation.begin().thenLoop("animation.sleeping");
     public static final RawAnimation SWIM = RawAnimation.begin().thenLoop("animation.swim");
     public static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.attack");
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
         controllerRegistrar.add(
-                new AnimationController<>(this, "Sit", 0,
-                        (state) -> (this.isInSittingPose()) ? state.setAndContinue(SIT) : PlayState.STOP),
+                new AnimationController<>(this, "Sit/Sleep", 10,
+                        (state) -> (this.isInSittingPose()) ? (this.isResting() ? state.setAndContinue(SLEEPING) : state.setAndContinue(SIT)) : PlayState.STOP),
                 new AnimationController<>(this, "Swim", 0,
                         (state) -> this.isSwimming() ? state.setAndContinue(SWIM) : PlayState.STOP),
                 new AnimationController<>(this, "Walk/Run/Idle", 0,
-                        (state) -> state.isMoving() ? state.setAndContinue(this.isSprinting() ? RUN : WALK) : state.setAndContinue(IDLE)),
+                        (state) -> {
+                            if (this.isInSittingPose() || this.isSwimming()) return PlayState.STOP;
+                            return state.isMoving() ? state.setAndContinue(this.isSprinting() ? RUN : WALK) : state.setAndContinue(IDLE);
+                        }),
                 new AnimationController<>(this,"Attack", 0,
                         (animTest) -> PlayState.STOP).triggerableAnim("attack", ATTACK)
         );
@@ -82,6 +84,8 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
     private static final EntityDataAccessor<String> DATA_ID =
             SynchedEntityData.defineId(AbstractPixelPetEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> RESTING =
+            SynchedEntityData.defineId(AbstractPixelPetEntity.class, EntityDataSerializers.BOOLEAN);;
 
     // TODO edit to account for modded creepers?
     public static final Predicate<LivingEntity> TARGET_SELECTOR = (entity) -> {
@@ -96,7 +100,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
     @Nullable
     private Goal currentAttackGoal = null;
-
+    @Nullable
     private Goal activeTargetingGoal = null;
 
     public AbstractPixelPetEntity(EntityType<? extends TamableAnimal> entityType, Level level) {
@@ -120,6 +124,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_ID, "");
+        builder.define(RESTING, false);
     }
 
     @Override
@@ -130,6 +135,8 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         }
         tag.putInt("ability_level", this.abilityLevel);
         tag.putString("status", this.status.getSerializedName());
+
+        tag.putBoolean("sleeping", this.isResting());
     }
 
     @Override
@@ -140,6 +147,8 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         }
         setAbilityLevel(tag.contains("ability_level") ? tag.getInt("ability_level") : 1);
         setStatus(tag.contains("status") ? PixelPetStatus.byName(tag.getString("status")) : PixelPetStatus.PASSIVE);
+
+        setResting(tag.contains("resting") && tag.getBoolean("resting"));
     }
 
     public void setStatus(PixelPetStatus status) {
@@ -170,7 +179,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
                 damageAttr.setBaseValue(resolved.damage());
             }
 
-            // Range affect melee and ranged attacks, but the scale and defaults for those are very different
+            // Range affects melee and ranged attacks, but the scale and defaults for those are very different
             // Defaulted to NEG_INF in LeveledAttackData, true default applied here
             AttributeInstance rangeAttr = this.getAttribute(ModAttributes.RANGE.holder());
             if (rangeAttr != null) {
@@ -237,7 +246,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         return getData().map(PixelPetData::baseHealth).orElse(PixelPetData.DEFAULT_BASE_HEALTH);
     }
 
-    public Item getTameItem() {
+    public Ingredient getTameItemTest() {
         return getData().map(PixelPetData::tameItem).orElse(PixelPetData.DEFAULT_TAME_ITEM);
     }
 
@@ -283,8 +292,15 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         return List.of();
     }
 
+    public void setResting(boolean resting) {
+        this.entityData.set(RESTING, resting);
+    }
+    public boolean isResting() {
+        return this.entityData.get(RESTING);
+    }
+
     protected void registerGoals() {
-        //this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this)); // TODO custom goal here? idk if sitting should be possible for normal pet use
+        this.goalSelector.addGoal(2, new PixelPetRestWhenOrderedToGoal(this));
         this.goalSelector.addGoal(11, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
@@ -307,7 +323,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
     @Override
     public boolean isFood(ItemStack itemStack) {
-        return itemStack.is(getTameItem());
+        return getTameItemTest().test(itemStack);
     }
 
     @Override
@@ -326,7 +342,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
                 InteractionResult interactionresult = super.mobInteract(player, hand);
                 if (!interactionresult.consumesAction()) {
-                    //this.setOrderedToSit(!this.isOrderedToSit()); // TODO see sitting comment above
+                    this.setOrderedToSit(!this.isOrderedToSit());
                     return InteractionResult.sidedSuccess(this.level().isClientSide());
                 }
 

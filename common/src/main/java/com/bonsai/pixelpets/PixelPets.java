@@ -1,5 +1,6 @@
 package com.bonsai.pixelpets;
 
+import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
 import com.bonsai.pixelpets.platform.Services;
 import com.bonsai.pixelpets.registry.*;
 import net.minecraft.resources.ResourceLocation;

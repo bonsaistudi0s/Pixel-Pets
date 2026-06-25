@@ -5,8 +5,10 @@
   "refmap": "${mod_id}.refmap.json",
   "compatibilityLevel": "JAVA_18",
   "mixins": [
+    "MobMixin",
     "PlayerMixin",
     "ProjectileMixin",
+    "ReloadableServerResourcesMixin",
     "TamableAnimalMixin"
   ],
   "client": [

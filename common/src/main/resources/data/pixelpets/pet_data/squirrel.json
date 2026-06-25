@@ -1,7 +1,9 @@
 {
   "entity_type": "pixelpets:walking_pet",
   "generic_name": "Squirrel",
-  "tame_item": "minecraft:sweet_berries",
+  "tame_item": {
+    "item": "minecraft:sweet_berries"
+  },
   "base_health": 16,
   "attack": {
     "1": {

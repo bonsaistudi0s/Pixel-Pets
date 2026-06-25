@@ -1,6 +1,12 @@
 {
   "entity_type": "pixelpets:walking_pet",
   "generic_name": "Capybara",
-  "tame_item": "minecraft:seagrass",
-  "base_health": 16
+  "tame_item": {
+    "item": "minecraft:seagrass"
+  },
+  "base_health": 16,
+  "scares": [
+    "minecraft:wolf",
+    "#minecraft:skeletons"
+  ]
 }
