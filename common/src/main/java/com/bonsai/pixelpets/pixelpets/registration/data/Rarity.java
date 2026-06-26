@@ -1,18 +1,18 @@
-package com.bonsai.pixelpets.pixelpets.pixelpetdata;
+package com.bonsai.pixelpets.pixelpets.registration.data;
 
 import net.minecraft.util.StringRepresentable;
 
-public enum PixelPetRarity implements StringRepresentable {
+public enum Rarity implements StringRepresentable {
     COMMON("common"),
     UNCOMMON("uncommon"),
     RARE("rare"),
     EPIC("epic"),
     LEGENDARY("legendary");
 
-    public static final EnumCodec<PixelPetRarity> CODEC = StringRepresentable.fromEnum(PixelPetRarity::values);
+    public static final EnumCodec<Rarity> CODEC = StringRepresentable.fromEnum(Rarity::values);
     private final String name;
 
-    PixelPetRarity(String name) {
+    Rarity(String name) {
         this.name = name;
     }
 
@@ -21,7 +21,7 @@ public enum PixelPetRarity implements StringRepresentable {
     }
 
     // Nullable
-    public static PixelPetRarity byName(String name) {
+    public static Rarity byName(String name) {
         return CODEC.byName(name);
     }
 

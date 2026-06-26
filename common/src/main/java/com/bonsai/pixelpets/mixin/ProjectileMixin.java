@@ -1,9 +1,8 @@
 package com.bonsai.pixelpets.mixin;
 
-import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.LeveledAttackData;
+import com.bonsai.pixelpets.pixelpets.registration.data.StatusEffectApplication;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
@@ -75,7 +74,7 @@ public class ProjectileMixin {
                 }
 
                 // Status Effects
-                for (LeveledAttackData.StatusEffectApplication effect : pixelPet.getOnHitStatuses()) {
+                for (StatusEffectApplication effect : pixelPet.getOnHitStatuses()) {
                     if (pixelPet.getRandom().nextFloat() < effect.chance()) {
                         livingEntity.addEffect(new MobEffectInstance(effect.effect(), effect.duration(), effect.amplifier()));
                     }

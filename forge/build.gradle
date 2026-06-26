@@ -79,6 +79,9 @@ dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
 
     implementation "software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}"
+
+    implementation fg.deobf("com.teamresourceful.resourcefullib:resourcefullib-forge-${resourcefullib_version}")
+
 }
 
 publishing {

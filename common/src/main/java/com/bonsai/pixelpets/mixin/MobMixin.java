@@ -1,7 +1,7 @@
 package com.bonsai.pixelpets.mixin;
 
 import com.bonsai.pixelpets.entities.goals.AvoidPixelPetGoal;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;

@@ -4,10 +4,11 @@ import com.bonsai.pixelpets.entities.goals.PixelPetMeleeAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRangedAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRestWhenOrderedToGoal;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.LeveledAttackData;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.registration.data.LeveledAttackData;
+import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
+import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
+import com.bonsai.pixelpets.pixelpets.registration.data.StatusEffectApplication;
 import com.bonsai.pixelpets.registry.ModAttributes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -258,7 +259,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         return getData().map(PixelPetData::genericName).orElse(PixelPetData.DEFAULT_GENERIC_NAME);
     }
 
-    public List<LeveledAttackData.StatusEffectApplication> getOnHitStatuses() {
+    public List<StatusEffectApplication> getOnHitStatuses() {
         if (this.currentAttack == null) return List.of();
         return this.currentAttack.statusEffects();
     }
@@ -456,7 +457,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     @Override
     public boolean doHurtTarget(Entity entity) {
         if (entity instanceof LivingEntity livingEntity) {
-            for (LeveledAttackData.StatusEffectApplication effect : this.getOnHitStatuses()) {
+            for (StatusEffectApplication effect : this.getOnHitStatuses()) {
                 if (this.getRandom().nextFloat() < effect.chance()) {
                     livingEntity.addEffect(new MobEffectInstance(effect.effect(), effect.duration(), effect.amplifier()));
                 }

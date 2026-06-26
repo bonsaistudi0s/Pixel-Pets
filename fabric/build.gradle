@@ -9,11 +9,24 @@ dependencies {
         parchment("org.parchmentmc.data:parchment-${parchment_minecraft}:${parchment_version}@zip")
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
-    modImplementation "software.bernie.geckolib:geckolib-fabric-${minecraft_version}:${geckolib_version}"
+    modImplementation("software.bernie.geckolib:geckolib-fabric-${minecraft_version}:${geckolib_version}")
 
-    modImplementation "com.teamresourceful.resourcefullib:resourcefullib-fabric-${resourcefullib_version}"
+    modImplementation("com.teamresourceful.resourcefullib:resourcefullib-fabric-${resourcefullib_version}")
+
+
+    // TODO this sucks but idk how to fix it
+    constraints {
+        modImplementation("net.fabricmc.fabric-api:fabric-resource-loader-v0") {
+            version {
+                strictly("1.3.1+5b5275af19")
+            }
+        }
+    }
+
+
 }
 
 loom {

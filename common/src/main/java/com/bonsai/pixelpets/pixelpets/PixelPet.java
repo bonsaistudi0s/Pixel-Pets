@@ -2,8 +2,8 @@ package com.bonsai.pixelpets.pixelpets;
 
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
+import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;

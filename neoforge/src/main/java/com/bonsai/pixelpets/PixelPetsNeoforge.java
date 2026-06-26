@@ -2,12 +2,8 @@ package com.bonsai.pixelpets;
 
 
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import com.bonsai.pixelpets.registry.*;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -15,10 +11,6 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.registries.RegisterEvent;
-
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 @Mod(PixelPets.MOD_ID)
 public class PixelPetsNeoforge {

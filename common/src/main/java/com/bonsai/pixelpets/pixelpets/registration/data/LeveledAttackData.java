@@ -1,12 +1,10 @@
-package com.bonsai.pixelpets.pixelpets.pixelpetdata;
+package com.bonsai.pixelpets.pixelpets.registration.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.projectile.Projectile;
 
@@ -111,12 +109,4 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
         }
     }
 
-    public record StatusEffectApplication(Holder<MobEffect> effect, int amplifier, int duration, float chance) {
-        public static final Codec<StatusEffectApplication> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                BuiltInRegistries.MOB_EFFECT.holderByNameCodec().fieldOf("effect").forGetter(StatusEffectApplication::effect),
-                Codec.INT.optionalFieldOf("amplifier", 0).forGetter(StatusEffectApplication::amplifier),
-                Codec.INT.optionalFieldOf("duration", 40).forGetter(StatusEffectApplication::duration),
-                Codec.floatRange(0.0F, 1.0F).optionalFieldOf("chance", 1.0F).forGetter(StatusEffectApplication::chance)
-        ).apply(instance, StatusEffectApplication::new));
-    }
 }

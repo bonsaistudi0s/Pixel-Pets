@@ -1,15 +1,15 @@
-package com.bonsai.pixelpets.pixelpets.pixelpetdata;
+package com.bonsai.pixelpets.pixelpets.registration;
 
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
-import com.mojang.datafixers.util.Either;
+import com.bonsai.pixelpets.pixelpets.registration.data.LeveledAttackData;
+import com.bonsai.pixelpets.pixelpets.registration.data.Rarity;
+import com.bonsai.pixelpets.pixelpets.registration.data.ScareValue;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Items;
@@ -34,7 +34,7 @@ public record PixelPetData(
         LeveledAttackData attack,
         int tameChance,
         List<ScareValue> scares,
-        PixelPetRarity rarity
+        Rarity rarity
 ) {
 
     public static final String DEFAULT_GENERIC_NAME = "Unnamed";
@@ -43,7 +43,7 @@ public record PixelPetData(
     public static final ResourceLocation DEFAULT_ANIMATION_ID = PixelPets.identifier("default_pet");
     public static final LeveledAttackData DEFAULT_ATTACK = new LeveledAttackData(new TreeMap<>());
     public static final int DEFAULT_TAME_CHANCE = 25;
-    public static final PixelPetRarity DEFAULT_RARITY = PixelPetRarity.COMMON;
+    public static final Rarity DEFAULT_RARITY = Rarity.COMMON;
 
     public static final Codec<PixelPetData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ResourceLocation.CODEC
@@ -79,7 +79,7 @@ public record PixelPetData(
                     .forGetter(PixelPetData::scares),
 
             Codec.STRING.optionalFieldOf("rarity")
-                    .xmap(s -> s.map(PixelPetRarity::byName).orElse(DEFAULT_RARITY),
+                    .xmap(s -> s.map(Rarity::byName).orElse(DEFAULT_RARITY),
                             r -> Optional.of(r.name().toLowerCase()))
                     .forGetter(PixelPetData::rarity)
 
@@ -100,18 +100,4 @@ public record PixelPetData(
     );
 
 
-    public sealed interface ScareValue {
-
-        Codec<ScareValue> CODEC = ExtraCodecs.TAG_OR_ELEMENT_ID.xmap(
-                tagOrElement -> tagOrElement.tag()
-                        ? new Tag(TagKey.create(Registries.ENTITY_TYPE, tagOrElement.id()))
-                        : new Element(tagOrElement.id()),
-                v -> v instanceof Tag t
-                        ? new ExtraCodecs.TagOrElementLocation(t.tag().location(), true)
-                        : new ExtraCodecs.TagOrElementLocation(((Element) v).id(), false)
-        );
-
-        record Element(ResourceLocation id) implements ScareValue { }
-        record Tag(TagKey<EntityType<?>> tag) implements ScareValue { }
-    }
 }

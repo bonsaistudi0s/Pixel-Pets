@@ -1,6 +1,7 @@
-package com.bonsai.pixelpets.pixelpets.pixelpetdata;
+package com.bonsai.pixelpets.pixelpets.registration;
 
 import com.bonsai.pixelpets.PixelPets;
+import com.bonsai.pixelpets.pixelpets.registration.data.ScareValue;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
@@ -12,8 +13,9 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
+
+// TODO consider switching to datapack registry approach?
 public class PixelPetDataRegistry extends SimpleJsonResourceReloadListener {
 
     public static final PixelPetDataRegistry INSTANCE = new PixelPetDataRegistry();
@@ -31,8 +33,8 @@ public class PixelPetDataRegistry extends SimpleJsonResourceReloadListener {
         jsons.forEach((id, json) -> {
             PixelPetData.CODEC
                     .parse(JsonOps.INSTANCE, json)
-                    .resultOrPartial(err -> PixelPets.LOGGER.error("Failed to load species {}: {}", id, err))
-                    .ifPresent(data -> {
+                    .result()
+                    .ifPresentOrElse(data -> {
                         species.put(id, new PixelPetData(
                                 id,
                                 data.entityType(),
@@ -45,7 +47,7 @@ public class PixelPetDataRegistry extends SimpleJsonResourceReloadListener {
                                 data.scares(),
                                 data.rarity()
                         ));
-                    });
+                    }, () -> PixelPets.LOGGER.info("Failed to load PixelPet {}", id));
         });
         PixelPets.LOGGER.info("Loaded {} PixelPet species", species.size());
     }
@@ -73,11 +75,11 @@ public class PixelPetDataRegistry extends SimpleJsonResourceReloadListener {
         species.forEach((id, data) -> {
             data.scares().forEach(scareValue -> {
                 switch (scareValue) {
-                    case PixelPetData.ScareValue.Element e -> {
+                    case ScareValue.Element e -> {
                         BuiltInRegistries.ENTITY_TYPE.getOptional(e.id())
                                 .ifPresent(type -> scaredByMap.computeIfAbsent(type, k -> new HashSet<>()).add(id));
                     }
-                    case PixelPetData.ScareValue.Tag t -> {
+                    case ScareValue.Tag t -> {
                         BuiltInRegistries.ENTITY_TYPE.getTagOrEmpty(t.tag())
                                 .forEach(holder -> scaredByMap.computeIfAbsent(holder.value(), k -> new HashSet<>()).add(id));
                     }

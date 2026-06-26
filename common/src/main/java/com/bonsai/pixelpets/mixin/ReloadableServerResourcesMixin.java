@@ -1,6 +1,6 @@
 package com.bonsai.pixelpets.mixin;
 
-import com.bonsai.pixelpets.pixelpets.pixelpetdata.PixelPetDataRegistry;
+import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import net.minecraft.server.ReloadableServerResources;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
