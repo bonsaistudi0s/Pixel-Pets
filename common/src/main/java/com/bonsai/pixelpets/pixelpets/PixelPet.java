@@ -3,10 +3,10 @@ package com.bonsai.pixelpets.pixelpets;
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -64,12 +64,13 @@ public class PixelPet {
     public ResourceLocation getDataLocation() {
         return this.dataLocation;
     }
-    public Optional<PixelPetData> getData() {
-        return PixelPetDataRegistry.INSTANCE.get(this.dataLocation);
+    public Optional<PixelPetData> getData(RegistryAccess registryAccess) {
+        return registryAccess.registry(PixelPets.PET_DATA)
+                .flatMap(reg -> reg.getOptional(this.dataLocation));
     }
 
-    public EntityType<? extends AbstractPixelPetEntity> getEntityType() {
-        return getData()
+    public EntityType<? extends AbstractPixelPetEntity> getEntityType(RegistryAccess registryAccess) {
+        return getData(registryAccess)
                 .map(PixelPetData::entityType)
                 .orElseThrow(() -> new IllegalStateException("Unknown species: " + this.dataLocation));
     }

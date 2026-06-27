@@ -1,7 +1,7 @@
 package com.bonsai.pixelpets.mixin;
 
+import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.goals.AvoidPixelPetGoal;
-import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -30,7 +30,7 @@ public class MobMixin {
 
         // AvoidPixelPetGoal is very similar to vanilla, thus only works on PathfinderMob
         if ((Object) this instanceof PathfinderMob pathfinderMob) {
-            Set<ResourceLocation> scaryPets = PixelPetDataRegistry.INSTANCE.getScaryPets(pathfinderMob.getType());
+            Set<ResourceLocation> scaryPets = PixelPets.getScaryPets(pathfinderMob.getType());
             if (!scaryPets.isEmpty()) {
                 //PixelPets.LOGGER.info("EntityType: " + self.getType());
                 //PixelPets.LOGGER.info("Scared of: " + scaryPets);

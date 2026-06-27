@@ -1,9 +1,9 @@
 package com.bonsai.pixelpets.registry;
 
+import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -19,6 +19,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
+import static com.bonsai.pixelpets.PixelPets.PET_DATA;
+
 public class ModCommands {
 
     public static void register(@NotNull CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext registryAccess, Commands.CommandSelection environment) {
@@ -26,20 +28,21 @@ public class ModCommands {
                 .requires(s -> s.hasPermission(2))
                 .then(Commands.argument("type", ResourceLocationArgument.id())
                         .suggests((ctx, builder) -> {
-                            PixelPetDataRegistry.INSTANCE.getAll().forEach(d ->
-                                    builder.suggest(d.id().toString())
-                            );
+                            ctx.getSource().getServer().registryAccess().registry(PET_DATA)
+                                    .ifPresentOrElse((
+                                            registry -> registry.keySet().forEach(loc -> builder.suggest(loc.toString()))),
+                                            () -> PixelPets.LOGGER.info("PET_DATA registry not present"));
                             return builder.buildFuture();
                         })
                         .executes((context) -> {
                             CommandSourceStack source = context.getSource();
                             ServerPlayer player = context.getSource().getPlayerOrException();
 
+                            var reg = player.level().registryAccess().registryOrThrow(PET_DATA);
                             ResourceLocation id = ResourceLocationArgument.getId(context, "type");
-                            PixelPetData data = PixelPetDataRegistry.INSTANCE.getById(id)
+                            PixelPetData data = reg.getOptional(id)
                                     .orElseThrow(() -> new SimpleCommandExceptionType(
                                             Component.literal("Unknown pet species: " + id)).create());
-
 
                             AbstractPixelPetEntity entity = data.entityType().create(player.level());
                             if (entity == null) {
@@ -58,8 +61,9 @@ public class ModCommands {
                                     CommandSourceStack source = context.getSource();
                                     ServerPlayer player = context.getSource().getPlayerOrException();
 
+                                    var reg = player.level().registryAccess().registryOrThrow(PET_DATA);
                                     ResourceLocation id = ResourceLocationArgument.getId(context, "type");
-                                    PixelPetData data = PixelPetDataRegistry.INSTANCE.getById(id)
+                                    PixelPetData data = reg.getOptional(id)
                                             .orElseThrow(() -> new SimpleCommandExceptionType(
                                                     Component.literal("Unknown pet species: " + id)).create());
 
@@ -89,8 +93,9 @@ public class ModCommands {
                                             CommandSourceStack source = context.getSource();
                                             ServerPlayer player = context.getSource().getPlayerOrException();
 
+                                            var reg = player.level().registryAccess().registryOrThrow(PET_DATA);
                                             ResourceLocation id = ResourceLocationArgument.getId(context, "type");
-                                            PixelPetData data = PixelPetDataRegistry.INSTANCE.getById(id)
+                                            PixelPetData data = reg.getOptional(id)
                                                     .orElseThrow(() -> new SimpleCommandExceptionType(
                                                             Component.literal("Unknown pet species: " + id)).create());
 

@@ -4,11 +4,13 @@ import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.registration.data.LeveledAttackData;
 import com.bonsai.pixelpets.pixelpets.registration.data.Rarity;
-import com.bonsai.pixelpets.pixelpets.registration.data.ScareValue;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.RegistryCodecs;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.EntityType;
@@ -33,7 +35,7 @@ public record PixelPetData(
         ResourceLocation animationId,
         LeveledAttackData attack,
         int tameChance,
-        List<ScareValue> scares,
+        List<HolderSet<EntityType<?>>> scares,
         Rarity rarity
 ) {
 
@@ -75,7 +77,7 @@ public record PixelPetData(
             ExtraCodecs.intRange(1, 100).optionalFieldOf("tame_chance", DEFAULT_TAME_CHANCE)
                     .forGetter(PixelPetData::tameChance),
 
-            ScareValue.CODEC.listOf().optionalFieldOf("scares", List.of())
+            RegistryCodecs.homogeneousList(Registries.ENTITY_TYPE).listOf().optionalFieldOf("scares", List.of())
                     .forGetter(PixelPetData::scares),
 
             Codec.STRING.optionalFieldOf("rarity")

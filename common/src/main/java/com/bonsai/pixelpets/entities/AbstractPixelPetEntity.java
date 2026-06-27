@@ -1,12 +1,12 @@
 package com.bonsai.pixelpets.entities;
 
+import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.goals.PixelPetMeleeAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRangedAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRestWhenOrderedToGoal;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.registration.data.LeveledAttackData;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.registration.PixelPetDataRegistry;
 import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
 import com.bonsai.pixelpets.pixelpets.registration.data.StatusEffectApplication;
 import com.bonsai.pixelpets.registry.ModAttributes;
@@ -236,7 +236,9 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     }
 
     public Optional<PixelPetData> getData() {
-        return PixelPetDataRegistry.INSTANCE.get(getDataLocation());
+        return level().registryAccess()
+                .registry(PixelPets.PET_DATA)
+                .flatMap(reg -> reg.getOptional(getDataLocation()));
     }
 
     public ResourceLocation getAnimationId() {
