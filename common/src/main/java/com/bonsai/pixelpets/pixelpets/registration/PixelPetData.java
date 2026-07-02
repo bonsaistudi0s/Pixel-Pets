@@ -3,6 +3,7 @@ package com.bonsai.pixelpets.pixelpets.registration;
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.registration.data.LeveledAttackData;
+import com.bonsai.pixelpets.pixelpets.registration.data.ProjectileRenderData;
 import com.bonsai.pixelpets.pixelpets.registration.data.Rarity;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
@@ -27,7 +28,6 @@ import java.util.TreeMap;
 // TODO pet sounds could be handled here
 // TODO emissive layers too, if necessary
 public record PixelPetData(
-        ResourceLocation id,
         EntityType<AbstractPixelPetEntity> entityType,
         String genericName,
         Ingredient tameItem,
@@ -36,7 +36,10 @@ public record PixelPetData(
         LeveledAttackData attack,
         int tameChance,
         List<HolderSet<EntityType<?>>> scares,
-        Rarity rarity
+        Rarity rarity,
+
+        // Purely clientside
+        ProjectileRenderData projectileRenderData
 ) {
 
     public static final String DEFAULT_GENERIC_NAME = "Unnamed";
@@ -46,6 +49,7 @@ public record PixelPetData(
     public static final LeveledAttackData DEFAULT_ATTACK = new LeveledAttackData(new TreeMap<>());
     public static final int DEFAULT_TAME_CHANCE = 25;
     public static final Rarity DEFAULT_RARITY = Rarity.COMMON;
+    public static final ProjectileRenderData DEFAULT_PROJECTILE_RENDER_DATA = new ProjectileRenderData.ItemBased(() -> Items.SNOWBALL, 1.0f, false);
 
     public static final Codec<PixelPetData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ResourceLocation.CODEC
@@ -83,23 +87,51 @@ public record PixelPetData(
             Codec.STRING.optionalFieldOf("rarity")
                     .xmap(s -> s.map(Rarity::byName).orElse(DEFAULT_RARITY),
                             r -> Optional.of(r.name().toLowerCase()))
-                    .forGetter(PixelPetData::rarity)
+                    .forGetter(PixelPetData::rarity),
 
-            ).apply(instance, (entityType,genericName, tameItem, baseHealth, animationId, attack, tameChance, scares, rarity) -> {
-                return new PixelPetData(
-                        null,
-                        entityType,
-                        genericName,
-                        tameItem,
-                        baseHealth,
-                        animationId,
-                        attack,
-                        tameChance,
-                        scares,
-                        rarity
-                );
-            })
-    );
+            ProjectileRenderData.CODEC.optionalFieldOf("projectile_render", DEFAULT_PROJECTILE_RENDER_DATA)
+                    .forGetter(PixelPetData::projectileRenderData)
+
+            ).apply(instance, PixelPetData::new));
+
+    public static final Codec<PixelPetData> CLIENT_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            ResourceLocation.CODEC
+                    .flatXmap(
+                            rl -> Optional.ofNullable(BuiltInRegistries.ENTITY_TYPE.get(rl))
+                                    .map(t -> (EntityType<AbstractPixelPetEntity>) t)
+                                    .map(DataResult::success)
+                                    .orElseGet(() -> DataResult.error(() -> "Unknown entity type: " + rl)),
+                            type -> DataResult.success(BuiltInRegistries.ENTITY_TYPE.getKey(type))
+                    )
+                    .fieldOf("entity_type")
+                    .forGetter(PixelPetData::entityType),
+
+            Codec.STRING.optionalFieldOf("generic_name", DEFAULT_GENERIC_NAME)
+                    .forGetter(PixelPetData::genericName),
+
+            ResourceLocation.CODEC.optionalFieldOf("animation_id", DEFAULT_ANIMATION_ID)
+                    .forGetter(PixelPetData::animationId),
+
+            Codec.STRING.optionalFieldOf("rarity")
+                    .xmap(s -> s.map(Rarity::byName).orElse(DEFAULT_RARITY),
+                            r -> Optional.of(r.name().toLowerCase()))
+                    .forGetter(PixelPetData::rarity),
+
+            ProjectileRenderData.CODEC.optionalFieldOf("projectile_render", DEFAULT_PROJECTILE_RENDER_DATA)
+                    .forGetter(PixelPetData::projectileRenderData)
+
+    ).apply(instance, (entityType, genericName, animationId, rarity, projectileData) -> new PixelPetData(
+            entityType,
+            genericName,
+            DEFAULT_TAME_ITEM,
+            DEFAULT_BASE_HEALTH,
+            animationId,
+            DEFAULT_ATTACK,
+            DEFAULT_TAME_CHANCE,
+            List.of(),
+            rarity,
+            projectileData
+    )));
 
 
 }

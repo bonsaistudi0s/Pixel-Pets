@@ -56,7 +56,7 @@ public class PixelPetsNeoforge {
         event.dataPackRegistry(
                 PixelPets.PET_DATA,
                 PixelPetData.CODEC,
-                PixelPetData.CODEC,
+                PixelPetData.CLIENT_CODEC,
                 builder -> builder.onBake((registry) -> {
                     PixelPets.scaredByMap = new HashMap<>();
                     registry.holders().forEach(holder -> {

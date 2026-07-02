@@ -7,7 +7,6 @@
   "mixins": [
     "MobMixin",
     "PlayerMixin",
-    "ProjectileMixin",
     "TamableAnimalMixin"
   ],
   "client": [

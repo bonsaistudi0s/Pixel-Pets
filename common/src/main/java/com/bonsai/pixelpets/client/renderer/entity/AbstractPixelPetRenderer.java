@@ -9,15 +9,7 @@ import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
 public class AbstractPixelPetRenderer extends GeoEntityRenderer<AbstractPixelPetEntity> {
 
-    private static final ResourceLocation DEFAULT_TEXTURE = PixelPets.identifier("textures/entity/capybara.png");
-
     public AbstractPixelPetRenderer(EntityRendererProvider.Context context) {
         super(context, new AbstractPixelPetModel());
     }
-
-//    @Override
-//    public ResourceLocation getTextureLocation(AbstractPixelPetEntity entity) {
-//        return entity.getDataLocation() == null ? DEFAULT_TEXTURE
-//                : PixelPets.identifier("textures/entity/" + entity.getDataLocation().getPath() + ".png");
-//    }
 }

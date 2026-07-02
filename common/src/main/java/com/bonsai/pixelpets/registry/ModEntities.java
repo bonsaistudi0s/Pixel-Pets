@@ -1,10 +1,7 @@
 package com.bonsai.pixelpets.registry;
 
 import com.bonsai.pixelpets.PixelPets;
-import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
-import com.bonsai.pixelpets.entities.AmphibiousPixelPetEntity;
-import com.bonsai.pixelpets.entities.SwimmingPixelPetEntity;
-import com.bonsai.pixelpets.entities.WalkingPixelPetEntity;
+import com.bonsai.pixelpets.entities.*;
 import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistries;
 import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,6 +24,9 @@ public class ModEntities {
     public static final Supplier<EntityType<AbstractPixelPetEntity>> AMPHIBIOUS_PET = ENTITY_TYPES.register("amphibious_pet",
             () -> registerPet("amphibious_pet", AmphibiousPixelPetEntity::new));
 
+
+    public static final Supplier<EntityType<LobbedPixelPetProjectile>> LOBBED_PET_PROJECTILE = ENTITY_TYPES.register("lobbed_pet_projectile",
+            () -> registerProjectile("lobbed_pet_projectile", LobbedPixelPetProjectile::new));
 
 
     public static <T extends Entity> EntityType<T> registerPet(String name, EntityType.EntityFactory<T> factory) {

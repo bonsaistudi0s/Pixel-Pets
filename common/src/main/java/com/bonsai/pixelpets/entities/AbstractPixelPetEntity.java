@@ -49,6 +49,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+// TODO sometimes hesitant to attack player instructed targets?
+// TODO keeps attacking even if player gets too far away
 public abstract class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity, RangedAttackMob {
     /// Geckolib </br>
     /// DevNote: Make sure the animations in *.animation.json match the form below
@@ -295,6 +297,15 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         return List.of();
     }
 
+    public int getRicochet() {
+        AttributeInstance ricochetAttr = this.getAttribute(ModAttributes.RICOCHET.holder());
+        return (ricochetAttr != null) ? (int) ricochetAttr.getValue() : 0;
+    }
+    public int getGrowing() {
+        AttributeInstance growingAttr = this.getAttribute(ModAttributes.GROWING.holder());
+        return (growingAttr != null) ? (int) growingAttr.getValue() : 0;
+    }
+
     public void setResting(boolean resting) {
         this.entityData.set(RESTING, resting);
     }
@@ -315,13 +326,18 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
                 // Replaced later with PixelPetData value
                 .add(Attributes.MAX_HEALTH, 8)
                 .add(Attributes.ATTACK_DAMAGE, 4)
-                .add(ModAttributes.RANGE.holder(), 0.0f)         // Controls melee and ranged range, default applies to melee
-                .add(Attributes.ATTACK_SPEED, 20)       // # ticks until can attack again
+                .add(ModAttributes.RANGE.holder(), 0.0f)    // Controls melee and ranged range, default applies to melee
+                .add(Attributes.ATTACK_SPEED, 20)           // # ticks until can attack again
 
                 // Normal
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
                 .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.75f)
-                .add(Attributes.FOLLOW_RANGE, 10);
+                .add(Attributes.FOLLOW_RANGE, 10)
+
+                // Other
+                .add(ModAttributes.RICOCHET.holder(), 0)
+                .add(ModAttributes.GROWING.holder(), 1)
+        ;
     }
 
     @Override
@@ -384,6 +400,20 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         this.setSprinting(this.getOwner() != null && this.getOwner().isSprinting());
     }
 
+    @Override
+    protected int getBaseExperienceReward() {
+        return 0;
+    }
+
+    @Override
+    public boolean canAttack(LivingEntity target) {
+        if (this.getOwner() instanceof Player player) {
+            return super.canAttack(target) && ((PlayerPetAccess) player).pixelPets$getActivePets().stream().noneMatch((uuid) -> target.getUUID().equals(uuid));
+        }
+
+        return super.canAttack(target);
+    }
+
     // TODO despawn pet if can't catch up to player
     public void tryToTeleportToOwner() {
         LivingEntity livingentity = this.getOwner();
@@ -428,13 +458,15 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     }
 
     // TODO currently just snow-golem-like shooting logic
-    /// Status effect applications etc. handled in: {@link com.bonsai.pixelpets.mixin.ProjectileMixin}
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
         if (this.projectile == null) return;
 
         Projectile p = this.projectile.create(this.level());
         if (p == null) return;
+        if (p instanceof AbstractPixelPetProjectile petProjectile) {
+            petProjectile.setDataLocation(this.getDataLocation());
+        }
 
         p.moveTo(this.getX(), this.getEyeY(), this.getZ());
         p.setOwner(this);
@@ -444,14 +476,13 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         double d2 = d0 - p.getY();
         double d3 = target.getZ() - this.getZ();
         double d4 = Math.sqrt(d1 * d1 + d3 * d3) * (double)0.2F;
-        p.shoot(d1, d2 + d4, d3, 1.6F, 6.0F);
+        p.shoot(d1, d2 + d4, d3, 1.2F, 0.0F);
 
         this.level().addFreshEntity(p);
     }
 
     @Override
     protected AABB getAttackBoundingBox() {
-        if (this.currentAttack == null || this.currentAttack.range() < 0.0f) return super.getAttackBoundingBox();
         return super.getAttackBoundingBox().inflate(this.getRange(), 0.0f, this.getRange());
     }
 

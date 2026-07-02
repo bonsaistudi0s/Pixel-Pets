@@ -10,6 +10,7 @@ import net.minecraft.world.level.pathfinder.Path;
 
 import java.util.EnumSet;
 
+// TODO sometimes they stay still?
 public class PixelPetMeleeAttackGoal extends Goal {
     protected final AbstractPixelPetEntity mob;
     private Path path;
@@ -38,7 +39,7 @@ public class PixelPetMeleeAttackGoal extends Goal {
                 return false;
             } else {
                 this.path = this.mob.getNavigation().createPath(livingentity, 0);
-                return this.path != null ? true : this.mob.isWithinMeleeAttackRange(livingentity);
+                return this.path != null || this.mob.isWithinMeleeAttackRange(livingentity);
             }
         }
     }
@@ -50,7 +51,7 @@ public class PixelPetMeleeAttackGoal extends Goal {
         } else if (!livingentity.isAlive()) {
             return false;
         } else {
-            return !this.mob.isWithinRestriction(livingentity.blockPosition()) ? false : !(livingentity instanceof Player) || !livingentity.isSpectator() && !((Player) livingentity).isCreative();
+            return this.mob.isWithinRestriction(livingentity.blockPosition()) && (!(livingentity instanceof Player) || !livingentity.isSpectator() && !((Player) livingentity).isCreative());
         }
     }
 

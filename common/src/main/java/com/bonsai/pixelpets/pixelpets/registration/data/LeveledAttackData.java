@@ -47,7 +47,6 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
             Optional<Float> range,
             Optional<Integer> cooldown,
             Optional<EntityType<Projectile>> projectile,
-            Optional<List<String>> projectileEffects,
             Optional<List<StatusEffectApplication>> statusEffects
     ) {
         public static final Codec<PartialAttackData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -63,7 +62,6 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
                         )
                         .optionalFieldOf("projectile")
                         .forGetter(PartialAttackData::projectile),
-                Codec.STRING.listOf().optionalFieldOf("projectile_effects").forGetter(PartialAttackData::projectileEffects), // TODO
                 StatusEffectApplication.CODEC.listOf().optionalFieldOf("status_effects").forGetter(PartialAttackData::statusEffects)
         ).apply(instance, PartialAttackData::new));
 
@@ -74,7 +72,6 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
                     next.range.or(() -> this.range),
                     next.cooldown.or(() -> this.cooldown),
                     next.projectile.or(() -> this.projectile),
-                    next.projectileEffects.or(() -> this.projectileEffects),
                     next.statusEffects.or(() -> this.statusEffects)
             );
         }
@@ -86,7 +83,6 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
                     this.range.orElse(Float.NEGATIVE_INFINITY),
                     this.cooldown.orElse(20),
                     this.projectile,
-                    this.projectileEffects.orElse(List.of()),
                     this.statusEffects.orElse(List.of())
             );
         }
@@ -98,7 +94,6 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
             float range,
             int cooldown,
             Optional<EntityType<Projectile>> projectile,
-            List<String> projectileEffects,                     // TODO stuff like ricochet/grow will go here
             List<StatusEffectApplication> statusEffects
     ) {
         // Note: Because ranged vs melee is determined by projectile,

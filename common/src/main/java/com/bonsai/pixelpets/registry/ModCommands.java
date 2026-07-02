@@ -111,6 +111,7 @@ public class ModCommands {
                                             }
                                             entity.initialize(id, level, status);
                                             entity.moveTo(player.position());
+                                            entity.tame(player);
                                             player.level().addFreshEntity(entity);
 
                                             source.sendSystemMessage(Component.literal("Spawned " + data.genericName() + " pixel pet"));
