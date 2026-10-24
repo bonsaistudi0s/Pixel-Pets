@@ -4,7 +4,9 @@ import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.goals.PixelPetMeleeAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRangedAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRestWhenOrderedToGoal;
+import com.bonsai.pixelpets.pixelpets.PixelPet;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
+import com.bonsai.pixelpets.pixelpets.PixelPetsInventory;
 import com.bonsai.pixelpets.pixelpets.registration.data.LeveledAttackData;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
 import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
@@ -12,6 +14,7 @@ import com.bonsai.pixelpets.pixelpets.registration.data.StatusEffectApplication;
 import com.bonsai.pixelpets.registry.ModAttributes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -232,7 +235,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         this.entityData.set(DATA_ID, id.toString());
         this.setAbilityLevel(1);
     }
-
+    
     public ResourceLocation getDataLocation() {
         return ResourceLocation.parse(this.entityData.get(DATA_ID));
     }
@@ -387,6 +390,43 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
             //  Else despawn
             this.tame(player);
             this.setStatus(this.status);
+            if (!this.level().isClientSide()) {
+                PixelPetsInventory petInv = ((PlayerPetAccess) player).pixelPets$getPetInventory();
+                
+                PixelPet newPet = new PixelPet(
+                    this.getDataLocation(),
+                    Optional.of(this.getDisplayName().getString()),
+                    this.abilityLevel,
+                    Optional.of(this.getUUID()),
+                    0
+                );
+                
+                boolean added = false;
+                for (int i = 0; i < petInv.equipped.size(); i++) {
+                    if (petInv.equipped.get(i).isEmpty()) {
+                        petInv.equipped.set(i, newPet);
+                        added = true;
+                        break;
+                    }
+                }
+                
+                if (!added) {
+                    for (int i = 0; i < petInv.stored.size(); i++) {
+                        if (petInv.stored.get(i).isEmpty()) {
+                            petInv.stored.set(i, newPet);
+                            added = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!added) {
+                    player.displayClientMessage(Component.literal("Not enough space!"), true);
+                    this.discard();
+                    return;
+                }
+            }
+            
             this.level().broadcastEntityEvent(this, (byte)7);
         } else {
             this.level().broadcastEntityEvent(this, (byte)6);

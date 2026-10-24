@@ -1,5 +1,6 @@
 package com.bonsai.pixelpets;
 
+import com.bonsai.pixelpets.networking.NetworkHandler;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
 import com.bonsai.pixelpets.platform.Services;
 import com.bonsai.pixelpets.registry.*;
@@ -42,6 +43,7 @@ public class PixelPets {
         ModItems.CREATIVE_TABS.init();
 
         ModEntities.ENTITY_TYPES.init();
+        NetworkHandler.init();
     }
 
     public static ResourceLocation identifier(String path) {

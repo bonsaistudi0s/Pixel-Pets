@@ -1,6 +1,7 @@
 package com.bonsai.pixelpets.registry;
 
 import com.bonsai.pixelpets.PixelPets;
+import com.bonsai.pixelpets.items.PetDebugItem;
 import com.teamresourceful.resourcefullib.common.item.tabs.ResourcefulCreativeModeTab;
 import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistries;
 import com.teamresourceful.resourcefullib.common.registry.ResourcefulRegistry;
@@ -22,7 +23,7 @@ public class ModItems {
     // example block item:
     // public static final Supplier<Item> TINY_CACTUS =  ITEMS.register("tiny_cactus", () -> new BlockItem(ModBlocks.TINY_CACTUS.get(), new Item.Properties()));
 
-
+    public static final Supplier<Item> PET_DEBUG = ITEMS.register("pet_debug", () -> new PetDebugItem(new Item.Properties().stacksTo(1)));
 
 
     /// CREATIVE TABS
