@@ -1,10 +1,8 @@
 package com.bonsai.pixelpets.client.renderer.entity;
 
-import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.client.model.entity.AbstractPixelPetModel;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
 public class AbstractPixelPetRenderer extends GeoEntityRenderer<AbstractPixelPetEntity> {

@@ -1,6 +1,7 @@
 package com.bonsai.pixelpets;
 
 
+import com.bonsai.pixelpets.client.PixelPetScreenRenderingUtil;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
 import com.bonsai.pixelpets.registry.*;
@@ -8,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
@@ -33,6 +35,7 @@ public class PixelPetsNeoforge {
             eventBus.addListener(PixelPetsNeoforgeClient::registerBlocks);
             eventBus.addListener(PixelPetsNeoforgeClient::registerEntityRenderers);
             eventBus.addListener(PixelPetsNeoforgeClient::registerParticleFactories);
+            eventBus.addListener(PixelPetsNeoforgeClient::registerDependencyGraph);
         }
 
         NeoForge.EVENT_BUS.addListener(this::registerCommands);

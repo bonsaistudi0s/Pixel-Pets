@@ -388,6 +388,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
             // TODO add to player pet inv here
             //  If empty slot, auto equip and link uuid
             //  Else despawn
+            ((PlayerPetAccess) player).pixelPets$addCaughtPet(this.getDataLocation());
             this.tame(player);
             this.setStatus(this.status);
             if (!this.level().isClientSide()) {
@@ -447,8 +448,8 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
     @Override
     public boolean canAttack(LivingEntity target) {
-        if (this.getOwner() instanceof Player player) {
-            return super.canAttack(target) && ((PlayerPetAccess) player).pixelPets$getActivePets().stream().noneMatch((uuid) -> target.getUUID().equals(uuid));
+        if (target instanceof TamableAnimal tamable) {
+            return super.canAttack(target) && ((tamable.getOwnerUUID() == null) || !(tamable.getOwnerUUID().equals(this.getOwnerUUID())));
         }
 
         return super.canAttack(target);

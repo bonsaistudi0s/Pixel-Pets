@@ -7,8 +7,8 @@ import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 
 public class AbstractPixelPetModel extends DefaultedEntityGeoModel<AbstractPixelPetEntity> {
 
-    private static final ResourceLocation FALLBACK = PixelPets.identifier("capybara");
-    private static final ResourceLocation ANIMATION_DEFAULT = PixelPets.identifier("default_pet");
+    private static final ResourceLocation FALLBACK = PixelPets.id("error_pet");
+    private static final ResourceLocation ANIMATION_DEFAULT = PixelPets.id("default_pet");
 
     public AbstractPixelPetModel() {
         super(FALLBACK);

@@ -1,8 +1,23 @@
 {
   "entity_type": "pixelpets:amphibious_pet",
   "generic_name": "Platypus",
+  "rarity": "rare",
   "tame_item": {
     "tag" : "minecraft:fishes"
   },
-  "base_health": 16
+  "base_health": 16,
+  "spawn_data": {
+    "moon_phase": {
+      "min": 2,
+      "max": 5,
+      "invert": true
+    },
+    "prerequisite_pets": {
+      "require_all": false,
+      "prerequisites": [
+        "pixelpets:capybara",
+        "pixelpets:gecko"
+      ]
+    }
+  }
 }

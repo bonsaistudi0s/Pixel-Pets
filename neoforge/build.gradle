@@ -47,6 +47,8 @@ dependencies {
 
     // RLib
     implementation "com.teamresourceful.resourcefullib:resourcefullib-neoforge-${resourcefullib_version}"
+    implementation "com.teamresourceful:bytecodecs:1.1.2"
+
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

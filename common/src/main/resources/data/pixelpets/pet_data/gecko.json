@@ -1,6 +1,7 @@
 {
   "entity_type": "pixelpets:walking_pet",
   "generic_name": "Gecko",
+  "rarity": "epic",
   "tame_item": {
     "item": "minecraft:spider_eye"
   },

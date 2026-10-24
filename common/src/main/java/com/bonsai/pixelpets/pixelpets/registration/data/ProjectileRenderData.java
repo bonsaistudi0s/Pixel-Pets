@@ -33,7 +33,7 @@ public sealed interface ProjectileRenderData {
 
     record Modeled(ResourceLocation model, ResourceLocation texture, ResourceLocation animation, float scale, boolean fullBright) implements ProjectileRenderData {
 
-        public static final ResourceLocation DEFAULT_ID = PixelPets.identifier("empty_pet_projectile");
+        public static final ResourceLocation DEFAULT_ID = PixelPets.id("empty_pet_projectile");
 
         static final MapCodec<Modeled> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 ResourceLocation.CODEC.optionalFieldOf("model", DEFAULT_ID).forGetter(Modeled::model),

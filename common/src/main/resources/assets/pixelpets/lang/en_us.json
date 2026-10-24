@@ -1,0 +1,25 @@
+{
+
+  "item.pixelpets.pet_graph": "Pet Graph",
+
+
+  "gui.pixelpets.pet_graph": "Pixel Pets Unlock Tree",
+  "gui.pixelpets.pet_graph.empty": "No pets to show :(",
+  "gui.pixelpets.pet_graph.empty_hint": "The pet data may be invalid, check the game log",
+
+  "gui.pixelpets.pet_graph.panel.close": "Close",
+  "gui.pixelpets.pet_graph.panel.rarity": "Rarity: ",
+  "gui.pixelpets.pet_graph.panel.tame_chance": "Tame Chance: ",
+  "gui.pixelpets.pet_graph.panel.tame_item": "Tame Item: ",
+  "gui.pixelpets.pet_graph.panel.tame_item.tooltip": "Taming Items: ",
+
+  "gui.pixelpets.pet_graph.moon.full_moon": "Full Moon",
+  "gui.pixelpets.pet_graph.moon.waning_gibbous": "Waning Gibbous",
+  "gui.pixelpets.pet_graph.moon.third_quarter": "Third Quarter",
+  "gui.pixelpets.pet_graph.moon.waning_crescent": "Waning Crescent",
+  "gui.pixelpets.pet_graph.moon.new_moon": "New Moon",
+  "gui.pixelpets.pet_graph.moon.waxing_crescent": "Waxing Crescent",
+  "gui.pixelpets.pet_graph.moon.first_quarter": "First Quarter",
+  "gui.pixelpets.pet_graph.moon.waxing_gibbous": "Waxing Gibbous"
+
+}

@@ -1,10 +1,12 @@
 package com.bonsai.pixelpets;
 
+import com.bonsai.pixelpets.client.PixelPetScreenRenderingUtil;
 import com.bonsai.pixelpets.client.renderer.entity.AbstractPixelPetRenderer;
 import com.bonsai.pixelpets.client.renderer.entity.PixelPetProjectileRenderer;
 import com.bonsai.pixelpets.registry.ModEntities;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 
@@ -28,6 +30,11 @@ public class PixelPetsNeoforgeClient {
 
         // Projectile renderers
         event.registerEntityRenderer(ModEntities.LOBBED_PET_PROJECTILE.get(), PixelPetProjectileRenderer::new);
+    }
+
+    // TODO test
+    public static void registerDependencyGraph(ClientPlayerNetworkEvent.LoggingIn event) {
+        PixelPetScreenRenderingUtil.getGraph();
     }
 
     @SubscribeEvent

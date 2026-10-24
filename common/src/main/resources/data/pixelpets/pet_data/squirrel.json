@@ -1,6 +1,7 @@
 {
   "entity_type": "pixelpets:walking_pet",
   "generic_name": "Squirrel",
+  "rarity": "legendary",
   "tame_item": {
     "item": "minecraft:sweet_berries"
   },
@@ -34,6 +35,13 @@
       "cooldown": 5,
       "range": 15,
       "projectile": "minecraft:snowball"
+    }
+  },
+  "spawn_data": {
+    "prerequisite_pets": {
+      "prerequisites": [
+        "pixelpets:capybara"
+      ]
     }
   }
 }

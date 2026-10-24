@@ -29,6 +29,15 @@ dependencies {
     // common seems to be unsuited for this multi-loader approach
     //compileOnly "com.teamresourceful.resourcefullib:resourcefullib-common-${resourcefullib_version}"
     compileOnly "com.teamresourceful.resourcefullib:resourcefullib-neoforge-${resourcefullib_version}"
+    compileOnly "com.teamresourceful:bytecodecs:1.1.2"
+
+    // Unit testing
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 configurations {

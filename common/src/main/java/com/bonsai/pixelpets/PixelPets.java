@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+// TODO consider releasing this mod without any pets, add pets in a separate mod/pack
 public class PixelPets {
 
     public static final String MOD_ID = "pixelpets";
@@ -46,7 +47,7 @@ public class PixelPets {
         NetworkHandler.init();
     }
 
-    public static ResourceLocation identifier(String path) {
+    public static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(PixelPets.MOD_ID, path);
     }
 

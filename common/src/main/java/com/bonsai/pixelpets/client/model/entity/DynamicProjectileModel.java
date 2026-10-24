@@ -8,7 +8,7 @@ import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 
 public class DynamicProjectileModel extends DefaultedEntityGeoModel<AbstractPixelPetProjectile> {
 
-    private static final ResourceLocation FALLBACK = PixelPets.identifier("empty_pet_projectile");
+    private static final ResourceLocation FALLBACK = PixelPets.id("empty_pet_projectile");
 
     public DynamicProjectileModel() {
         super(FALLBACK);
