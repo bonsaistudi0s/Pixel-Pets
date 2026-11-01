@@ -2,7 +2,7 @@ package com.bonsai.pixelpets.client.gui.screens.graph;
 
 import com.bonsai.pixelpets.client.PixelPetScreenRenderingUtil;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.registration.data.Rarity;
+import com.bonsai.pixelpets.pixelpets.registration.data.PixelPetRarity;
 import com.bonsai.pixelpets.pixelpets.registration.data.spawning.GenericIntRange;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -39,6 +39,8 @@ public final class PixelPetSpawnInfoPanel {
     private int closeX;
     private int closeY;
 
+    private TamingItemComponent tamingItemComponent = new TamingItemComponent();
+
     public PixelPetSpawnInfoPanel(ResourceLocation petId, Runnable onClose) {
         this.petId = petId;
         this.onClose = onClose;
@@ -72,6 +74,10 @@ public final class PixelPetSpawnInfoPanel {
         return true;
     }
 
+    public void tick() {
+        this.tamingItemComponent.tick();
+    }
+
     public void render(GuiGraphics g, int mouseX, int mouseY, int screenWidth, int screenHeight) {
         width = Math.min(PANEL_WIDTH, screenWidth - 2 * PADDING);
         height = Math.min(PANEL_HEIGHT, screenHeight - 2 * PADDING);
@@ -91,7 +97,7 @@ public final class PixelPetSpawnInfoPanel {
         PixelPetData data = registry != null ? registry.get(petId) : null;
 
         String name = data != null ? data.genericName() : petId.toString();
-        Rarity rarity = data != null ? data.rarity() : PixelPetData.DEFAULT_RARITY;
+        PixelPetRarity rarity = data != null ? data.rarity() : PixelPetData.DEFAULT_RARITY;
 
         // Title
         g.drawString(Minecraft.getInstance().font, Component.literal(name).withStyle(rarity.color()).withStyle(ChatFormatting.BOLD), x + PADDING, y + PADDING, TEXT);
@@ -114,7 +120,7 @@ public final class PixelPetSpawnInfoPanel {
         rowY += ROW_HEIGHT;
 
         Ingredient ingredient = data != null ? data.tameItem() : PixelPetData.DEFAULT_TAME_ITEM;
-        rowY += TamingItemComponent.render(g, font, ingredient, textX, rowY, mouseX, mouseY) + 6;
+        rowY += tamingItemComponent.render(g, font, ingredient, textX, rowY, mouseX, mouseY) + 6;
 
         int tamingChance = data != null ? data.tameChance() : PixelPetData.DEFAULT_TAME_CHANCE;
         g.drawString(font, Component.translatable("gui.pixelpets.pet_graph.panel.tame_chance").append(Component.literal(tamingChance + "%")), textX, rowY, TEXT);

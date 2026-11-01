@@ -19,5 +19,50 @@
         "pixelpets:gecko"
       ]
     }
+  },
+  "buff": {
+    "1": [
+      {
+        "id": "size",
+        "conditions": [
+          {
+            "type": "is_day"
+          }
+        ],
+        "attribute_modifiers": [
+          {
+            "attribute": "minecraft:generic.scale",
+            "modifier": {
+              "id": "pixelpets:platypus.scale",
+              "amount": 1.0,
+              "operation": "add_value"
+            }
+          }
+        ]
+      }
+    ],
+    "2": [
+      {
+        "id": "health",
+        "targets":{
+          "owner": true
+        },
+        "conditions": [
+          {
+            "type": "in_water"
+          }
+        ],
+        "attribute_modifiers": [
+          {
+            "attribute": "minecraft:generic.max_health",
+            "modifier": {
+              "id": "pixelpets:platypus.max_health",
+              "amount": 10.0,
+              "operation": "add_value"
+            }
+          }
+        ]
+      }
+    ]
   }
 }

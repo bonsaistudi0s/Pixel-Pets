@@ -2,9 +2,6 @@ package com.bonsai.pixelpets.util;
 
 import java.util.*;
 
-// This processing treats `AND` and `OR` edges as `AND` edges
-// The upside is that it's much simpler, and generally our input data should be/will be simple
-
 // There are edge cases with loops/mutual dependencies with mixed edge types that could be resolved algorithmically if we cared
 // They are weird when thought of in the context of pet unlock order, so I don't think they're important to address
 /*
@@ -46,10 +43,7 @@ public class GraphProcessor {
         for (var entry : graph.entrySet()) {
             T node = entry.getKey();
             for (T prerequisite : entry.getValue().prerequisites()) {
-                if (!Objects.equals(node, prerequisite)
-                        && !checked.contains(prerequisite)
-                        && graph.containsKey(prerequisite)
-                        && graph.get(prerequisite).prerequisites().contains(node)) {
+                if (!Objects.equals(node, prerequisite) && !checked.contains(prerequisite) && graph.containsKey(prerequisite) && graph.get(prerequisite).prerequisites().contains(node)) {
                     pairs.add(node + " <-> " + prerequisite);
                 }
             }
@@ -95,47 +89,114 @@ public class GraphProcessor {
         state.put(node, Visit.DONE);
     }
 
+    // Assumes the above checks have been done, for simplicity
     private static <T> Map<T, IDependencyData<T>> reduce(Map<T, IDependencyData<T>> graph) {
         Map<T, Integer> index = new HashMap<>();
         for (T node : graph.keySet()) {
             index.put(node, index.size());
         }
 
-        Map<T, BitSet> reach = new HashMap<>();
+        Map<T, BitSet> guaranteed = new HashMap<>();
         for (T node : graph.keySet()) {
-            reach(node, graph, index, reach);
+            guaranteed(node, graph, index, guaranteed);
         }
 
         Map<T, IDependencyData<T>> reduced = new LinkedHashMap<>();
+
         for (var entry : graph.entrySet()) {
-            BitSet indirect = new BitSet();
-            for (T prerequisite : entry.getValue().prerequisites()) {
-                indirect.or(reach.get(prerequisite));
-            }
+            Set<T> prerequisites = entry.getValue().prerequisites();
+            boolean requireAll = entry.getValue().requireAll();
 
             Set<T> kept = new LinkedHashSet<>();
-            for (T prerequisite : entry.getValue().prerequisites()) {
-                if (!indirect.get(index.get(prerequisite))) {
-                    kept.add(prerequisite);
+
+            if (requireAll) {
+                // AND: Remove prerequisites guaranteed by another prerequisite
+                BitSet indirect = new BitSet();
+
+                for (T prerequisite : prerequisites) {
+                    indirect.or(guaranteed.get(prerequisite));
+                }
+
+                for (T prerequisite : prerequisites) {
+                    if (!indirect.get(index.get(prerequisite))) {
+                        kept.add(prerequisite);
+                    }
+                }
+            } else {
+                // OR: Remove prerequisites that guarantee another prerequisite
+                for (T prerequisite : prerequisites) {
+                    Set<T> others = new HashSet<>(prerequisites);
+                    others.remove(prerequisite);
+
+                    if (!guaranteesAny(prerequisite, others, graph, new HashMap<>())) {
+                        kept.add(prerequisite);
+                    }
                 }
             }
 
-            reduced.put(entry.getKey(), new DependencyData<>(kept, entry.getValue().requireAll()));
+            reduced.put(entry.getKey(), new DependencyData<>(kept, requireAll));
         }
 
         return reduced;
     }
 
-    private static <T> BitSet reach(T node, Map<T, IDependencyData<T>> graph, Map<T, Integer> index, Map<T, BitSet> memo) {
+    private static <T> BitSet guaranteed(T node, Map<T, IDependencyData<T>> graph, Map<T, Integer> index, Map<T, BitSet> memo) {
         BitSet known = memo.get(node);
         if (known != null) {
             return known;
         }
 
+        Set<T> prerequisites = graph.get(node).prerequisites();
         BitSet result = new BitSet();
-        for (T prerequisite : graph.get(node).prerequisites()) {
-            result.set(index.get(prerequisite));
-            result.or(reach(prerequisite, graph, index, memo));
+
+        boolean requireAll = graph.get(node).requireAll();
+        boolean first = true;
+
+        for (T prerequisite : prerequisites) {
+            BitSet branch = (BitSet) guaranteed(prerequisite, graph, index, memo).clone();
+            branch.set(index.get(prerequisite));
+
+            if (requireAll) {
+                result.or(branch);
+            } else if (first) {
+                result.or(branch);
+            } else {
+                result.and(branch);
+            }
+
+            first = false;
+        }
+
+        memo.put(node, result);
+        return result;
+    }
+
+    private static <T> boolean guaranteesAny(T node, Set<T> targets, Map<T, IDependencyData<T>> graph, Map<T, Boolean> memo) {
+        if (targets.contains(node)) {
+            return true;
+        }
+
+        Boolean known = memo.get(node);
+        if (known != null) {
+            return known;
+        }
+
+        IDependencyData<T> data = graph.get(node);
+        Set<T> prerequisites = data.prerequisites();
+
+        if (prerequisites.isEmpty()) {
+            memo.put(node, false);
+            return false;
+        }
+
+        boolean result;
+
+        if (data.requireAll()) {
+            // AND: At least one prerequisite must guarantee a target
+            result = prerequisites.stream().anyMatch(p -> guaranteesAny(p, targets, graph, memo));
+        } else {
+            // OR: Every possible prerequisite must guarantee a target
+            result = prerequisites.stream().allMatch(p -> guaranteesAny(p, targets, graph, memo));
         }
 
         memo.put(node, result);

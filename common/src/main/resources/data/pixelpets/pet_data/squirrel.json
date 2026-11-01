@@ -2,12 +2,14 @@
   "entity_type": "pixelpets:walking_pet",
   "generic_name": "Squirrel",
   "rarity": "legendary",
-  "tame_item": {
-    "item": "minecraft:sweet_berries"
-  },
+  "tame_item": [
+    {"item":"minecraft:sweet_berries"},
+    {"tag":"minecraft:anvil"}
+  ],
   "base_health": 16,
   "projectile_render": {
-      "type": "model",
+      "type": "item",
+      "item": "minecraft:iron_axe",
       "full_bright": true
   },
   "attack": {

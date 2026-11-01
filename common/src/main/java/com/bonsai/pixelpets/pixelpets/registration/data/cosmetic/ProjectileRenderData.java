@@ -1,7 +1,8 @@
-package com.bonsai.pixelpets.pixelpets.registration.data;
+package com.bonsai.pixelpets.pixelpets.registration.data.cosmetic;
 
 import com.bonsai.pixelpets.PixelPets;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -18,16 +19,16 @@ public sealed interface ProjectileRenderData {
     float scale();
     boolean fullBright();
 
-    Codec<ProjectileRenderData> CODEC = Codec.STRING.dispatch(
+    Codec<ProjectileRenderData> CODEC = Codec.STRING.partialDispatch(
             "type",
-            data -> switch (data) {
+            data -> DataResult.success(switch (data) {
                 case Modeled m -> "model";
                 case ItemBased i -> "item";
-            },
+            }),
             type -> switch (type) {
-                case "model" -> Modeled.MAP_CODEC;
-                case "item" -> ItemBased.MAP_CODEC;
-                default -> throw new IllegalStateException("Unexpected value: " + type);
+                case "model" -> DataResult.success(Modeled.MAP_CODEC);
+                case "item" -> DataResult.success(ItemBased.MAP_CODEC);
+                default -> DataResult.error(() -> "Unknown projectile render type: " + type);
             }
     );
 

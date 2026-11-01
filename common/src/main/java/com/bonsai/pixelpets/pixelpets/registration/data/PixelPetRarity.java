@@ -5,14 +5,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 
-public enum Rarity implements StringRepresentable {
+public enum PixelPetRarity implements StringRepresentable {
     COMMON("common", ChatFormatting.WHITE),
     UNCOMMON("uncommon", ChatFormatting.YELLOW),
     RARE("rare", ChatFormatting.AQUA),
     EPIC("epic", ChatFormatting.LIGHT_PURPLE),
     LEGENDARY("legendary", ChatFormatting.GOLD);
 
-    public static final EnumCodec<Rarity> CODEC = StringRepresentable.fromEnum(Rarity::values);
+    public static final EnumCodec<PixelPetRarity> CODEC = StringRepresentable.fromEnum(PixelPetRarity::values);
     private final String name;
     private final ChatFormatting color;
 
@@ -20,7 +20,7 @@ public enum Rarity implements StringRepresentable {
     private final ResourceLocation catchableFrameTexture;
     private final ResourceLocation uncatchableFrameTexture;
 
-    Rarity(String name, ChatFormatting color) {
+    PixelPetRarity(String name, ChatFormatting color) {
         this.name = name;
         this.color = color;
         this.caughtFrameTexture = PixelPets.id("textures/gui/pet_graph/frame/caught_frame_" + name + ".png");
@@ -46,7 +46,7 @@ public enum Rarity implements StringRepresentable {
     }
 
     // Nullable
-    public static Rarity byName(String name) {
+    public static PixelPetRarity byName(String name) {
         return CODEC.byName(name);
     }
 

@@ -1,9 +1,8 @@
 package com.bonsai.pixelpets.client.renderer.entity;
 
-import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.client.model.entity.DynamicProjectileModel;
 import com.bonsai.pixelpets.entities.AbstractPixelPetProjectile;
-import com.bonsai.pixelpets.pixelpets.registration.data.ProjectileRenderData;
+import com.bonsai.pixelpets.pixelpets.registration.data.cosmetic.ProjectileRenderData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;

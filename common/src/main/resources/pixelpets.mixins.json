@@ -8,6 +8,7 @@
     "MobMixin",
     "PlayerMixin",
     "ScreenAccessor",
+    "ServerPlayerMixin",
     "TamableAnimalMixin"
   ],
   "client": [

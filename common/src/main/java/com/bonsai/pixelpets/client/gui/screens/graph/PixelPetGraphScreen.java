@@ -3,7 +3,7 @@ package com.bonsai.pixelpets.client.gui.screens.graph;
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.client.PixelPetScreenRenderingUtil;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.registration.data.Rarity;
+import com.bonsai.pixelpets.pixelpets.registration.data.PixelPetRarity;
 import com.bonsai.pixelpets.util.IGraphLayout;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -370,6 +370,14 @@ public boolean mouseClicked(double mouseX, double mouseY, int button) {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        if (this.infoPanel != null) {
+            this.infoPanel.tick();
+        }
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
 
@@ -600,12 +608,12 @@ public boolean mouseClicked(double mouseX, double mouseY, int button) {
         PixelPetData data = registry != null ? registry.get(id) : null;
         boolean catchable = graph.dependenciesMet(id, caughtPets);
 
-        ResourceLocation texture = data != null ? data.rarity().getCaughtFrameTexture() : Rarity.COMMON.getCaughtFrameTexture();
+        ResourceLocation texture = data != null ? data.rarity().getCaughtFrameTexture() : PixelPetRarity.COMMON.getCaughtFrameTexture();
         if (!caughtPets.contains(id)) {
             if (catchable) {
-                texture = data != null ? data.rarity().getCatchableFrameTexture() : Rarity.COMMON.getCatchableFrameTexture();
+                texture = data != null ? data.rarity().getCatchableFrameTexture() : PixelPetRarity.COMMON.getCatchableFrameTexture();
             } else {
-                texture = data != null ? data.rarity().getUncatchableFrameTexture() : Rarity.COMMON.getUncatchableFrameTexture();
+                texture = data != null ? data.rarity().getUncatchableFrameTexture() : PixelPetRarity.COMMON.getUncatchableFrameTexture();
             }
         }
 
@@ -627,7 +635,7 @@ public boolean mouseClicked(double mouseX, double mouseY, int button) {
         PixelPetData data = registry != null ? registry.get(id) : null;
 
         String name = data != null ? data.genericName() : id.toString();
-        Rarity rarity = data != null ? data.rarity() : Rarity.COMMON;
+        PixelPetRarity rarity = data != null ? data.rarity() : PixelPetRarity.COMMON;
 
         g.renderTooltip(font, Component.literal(name).withStyle(rarity.color()), mouseX, mouseY);
     }

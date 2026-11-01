@@ -4,8 +4,10 @@ import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
+import com.bonsai.pixelpets.pixelpets.registration.data.ability.LeveledAttackData;
 import com.bonsai.pixelpets.pixelpets.registration.data.spawning.PetDependencyData;
 import com.bonsai.pixelpets.util.*;
+import com.bonsai.pixelpets.util.describers.LeveledAttackDescriber;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Holder;
@@ -34,10 +36,12 @@ public class PixelPetScreenRenderingUtil {
     private static IGraphLayout<ResourceLocation> graph = EMPTY;
 
     private static final Map<ResourceLocation, LivingEntity> ENTITIES = new HashMap<>();
+    private static final Map<ResourceLocation, LeveledAttackDescriber> LEVELED_ATTACK_DESCRIPTIONS = new HashMap<>();
+
     private static ClientLevel cachedLevel;
 
     // For testing a more complex graph, lacks actual pet data
-    private static final Map<ResourceLocation, IDependencyData<ResourceLocation>> testGraph = RandomDependencyGraph.generate(100, 1236, i -> PixelPets.id("pet_" + i), DependencyData::new);
+    private static final Map<ResourceLocation, IDependencyData<ResourceLocation>> testGraph = RandomDependencyGraph.generate(100, 1234, i -> PixelPets.id("pet_" + i), DependencyData::new);
     private static final LayeredGraph<ResourceLocation> TEST_LAYERED = LayeredGraph.generate(testGraph, LAYERED_CONFIG);
 
     public static IGraphLayout<ResourceLocation> getGraph() {
@@ -53,7 +57,7 @@ public class PixelPetScreenRenderingUtil {
             graph = build(registries);
             builtFrom = new WeakReference<>(registries);
         }
-        return TEST_LAYERED;
+        return graph;
     }
 
     public static LivingEntity getEntity(ResourceLocation id) {
@@ -81,7 +85,40 @@ public class PixelPetScreenRenderingUtil {
 
             if (data == null) return null;
 
+            // fixme testing stuff, delete when done
+            LeveledAttackData attack = data.attack();
+            LeveledAttackDescriber attackDescriber = new LeveledAttackDescriber();
+            attackDescriber.generate(attack);
+            PixelPets.LOGGER.info(key.toString());
+            Arrays.stream(attackDescriber.getLevelDescriptions()).forEach(component -> PixelPets.LOGGER.info(component.getString()));
+
             return createEntity(key, data, level);
+        });
+    }
+
+    public static LeveledAttackDescriber getAttackDescriptions(ResourceLocation id) {
+        Minecraft minecraft = Minecraft.getInstance();
+        ClientLevel level = minecraft.level;
+
+        if (level == null) {
+            return null;
+        }
+
+        return LEVELED_ATTACK_DESCRIPTIONS.computeIfAbsent(id, key -> {
+            RegistryAccess registries = level.registryAccess();
+
+            PixelPetData data = registries.lookup(PET_DATA)
+                    .flatMap(registry -> registry.get(ResourceKey.create(PET_DATA, key)))
+                    .map(Holder::value)
+                    .orElse(null);
+
+            if (data == null) return null;
+
+            LeveledAttackData attack = data.attack();
+            LeveledAttackDescriber attackDescriber = new LeveledAttackDescriber();
+            attackDescriber.generate(attack);
+
+            return attackDescriber;
         });
     }
 

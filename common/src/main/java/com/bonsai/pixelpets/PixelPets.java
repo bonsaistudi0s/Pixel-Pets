@@ -2,6 +2,7 @@ package com.bonsai.pixelpets;
 
 import com.bonsai.pixelpets.networking.NetworkHandler;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
+import com.bonsai.pixelpets.pixelpets.registration.data.ability.EntityCondition;
 import com.bonsai.pixelpets.platform.Services;
 import com.bonsai.pixelpets.registry.*;
 import net.minecraft.core.Registry;
@@ -26,6 +27,7 @@ public class PixelPets {
 
     public static void init() {
         LOGGER.info("Common init on {}! we are currently in a {} environment!", Services.PLATFORM.getPlatformName(), Services.PLATFORM.getEnvironmentName());
+        LOGGER.info(Arrays.toString(Arrays.stream(EntityCondition.Type.values()).map(EntityCondition.Type::getSerializedName).toArray()));
 
         ModParticles.PARTICLE_TYPES.init();
 

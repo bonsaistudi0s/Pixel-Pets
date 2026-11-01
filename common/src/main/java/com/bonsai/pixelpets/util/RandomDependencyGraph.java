@@ -65,7 +65,7 @@ public final class RandomDependencyGraph {
 
     public record Config(int minGraphSize, int maxGraphSize, int maxPrerequisites, double requireAllProbability) {
         public static Config defaults() {
-            return new Config(1, 16, 8, 0.5);
+            return new Config(1, 16, 4, 0.5);
         }
     }
 }

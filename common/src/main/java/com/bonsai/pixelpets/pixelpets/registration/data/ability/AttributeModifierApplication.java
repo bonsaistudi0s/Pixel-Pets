@@ -1,4 +1,4 @@
-package com.bonsai.pixelpets.pixelpets.registration.data;
+package com.bonsai.pixelpets.pixelpets.registration.data.ability;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -8,6 +8,8 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
+// Pre 1.21.2 attributes have different names: https://minecraft.wiki/w/Attribute?oldid=2663201
+// Or https://mcsrc.dev/2/1.21.1/net/minecraft/world/entity/ai/attributes/Attributes
 public record AttributeModifierApplication(Holder<Attribute> attribute, AttributeModifier modifier) {
 
     public static final Codec<AttributeModifierApplication> CODEC = RecordCodecBuilder.create(instance -> instance.group(

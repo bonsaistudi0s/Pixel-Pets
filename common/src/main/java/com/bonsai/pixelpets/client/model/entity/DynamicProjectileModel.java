@@ -2,13 +2,15 @@ package com.bonsai.pixelpets.client.model.entity;
 
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.AbstractPixelPetProjectile;
-import com.bonsai.pixelpets.pixelpets.registration.data.ProjectileRenderData;
+import com.bonsai.pixelpets.pixelpets.registration.data.cosmetic.ProjectileRenderData;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 
 public class DynamicProjectileModel extends DefaultedEntityGeoModel<AbstractPixelPetProjectile> {
 
     private static final ResourceLocation FALLBACK = PixelPets.id("empty_pet_projectile");
+    private static final ProjectileRenderData.Modeled FALLBACK_DATA =
+            new ProjectileRenderData.Modeled(FALLBACK, FALLBACK, FALLBACK, 1.0f, false);
 
     public DynamicProjectileModel() {
         super(FALLBACK);
@@ -34,6 +36,6 @@ public class DynamicProjectileModel extends DefaultedEntityGeoModel<AbstractPixe
     }
 
     private ProjectileRenderData.Modeled renderData(AbstractPixelPetProjectile projectile) {
-        return (ProjectileRenderData.Modeled) projectile.getRenderData();
+        return (projectile.getRenderData() instanceof ProjectileRenderData.Modeled modeled) ? modeled : FALLBACK_DATA;
     }
 }

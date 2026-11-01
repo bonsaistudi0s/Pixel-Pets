@@ -17,6 +17,8 @@ import java.util.Optional;
 
 // TODO when making spawn logic, consider preventing spawns for pets in the players inv
 // TODO trading a pet shouldn't count as catching it
+
+// TODO optional description override, in case you want to have a haiku or smth mysterious instead?
 public record SpawnData(Optional<HolderSet<DimensionType>> dimensions,
                         Optional<HolderSet<Biome>> biomes,
                         Optional<HolderSet<Structure>> structures,
@@ -40,7 +42,7 @@ public record SpawnData(Optional<HolderSet<DimensionType>> dimensions,
                     GenericIntRange.CODEC.optionalFieldOf("time").forGetter(SpawnData::time),
                     GenericIntRange.CODEC.optionalFieldOf("moon_phase").forGetter(SpawnData::moonPhase),
                     GenericIntRange.CODEC.optionalFieldOf("light_level").forGetter(SpawnData::lightLevel),
-                    GenericIntRange.CODEC.optionalFieldOf("height").forGetter(SpawnData::lightLevel),
+                    GenericIntRange.CODEC.optionalFieldOf("height").forGetter(SpawnData::height),
                     PetDependencyData.CODEC.optionalFieldOf("prerequisite_pets", PetDependencyData.empty()).forGetter(SpawnData::prerequisitePets)
             ).apply(instance, SpawnData::new));
 

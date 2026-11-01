@@ -1,4 +1,4 @@
-package com.bonsai.pixelpets.pixelpets.registration.data;
+package com.bonsai.pixelpets.pixelpets.registration.data.ability;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

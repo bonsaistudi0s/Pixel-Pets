@@ -91,19 +91,17 @@ class LayeredGraphTest {
     }
 
     @Test
-    void disconnected_passes() {
+    void transitivity_reduced2() {
         Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
-                'A', new DependencyData<>(Set.of('B'), true),
-                'C', new DependencyData<>(Set.of('D'), true),
-                'B', new DependencyData<>(Set.of(), true),
-                'D', new DependencyData<>(Set.of(), true)
+                'X', new DependencyData<>(Set.of('A','B'), false),
+                'B', new DependencyData<>(Set.of('A'), true),
+                'A', new DependencyData<>(Set.of(), true)
         ));
 
         Map<Character, IDependencyData<Character>> expected = new HashMap<>(Map.of(
-                'A', new DependencyData<>(Set.of('B'), true),
-                'C', new DependencyData<>(Set.of('D'), true),
-                'B', new DependencyData<>(Set.of(), true),
-                'D', new DependencyData<>(Set.of(), true)
+                'X', new DependencyData<>(Set.of('A'), false),
+                'B', new DependencyData<>(Set.of('A'), true),
+                'A', new DependencyData<>(Set.of(), true)
         ));
 
         Map<Character, ? extends IDependencyData<Character>> processed = GraphProcessor.process(map);
@@ -112,7 +110,28 @@ class LayeredGraphTest {
     }
 
     @Test
-    void transitivity_reduced2() {
+    void transitivity_reduced3() {
+        Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A','B'), true),
+                'B', new DependencyData<>(Set.of('A','C'), false),
+                'A', new DependencyData<>(Set.of(), true),
+                'C', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, IDependencyData<Character>> expected = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A','B'), true),
+                'B', new DependencyData<>(Set.of('A','C'), false),
+                'A', new DependencyData<>(Set.of(), true),
+                'C', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, ? extends IDependencyData<Character>> processed = GraphProcessor.process(map);
+
+        assertEquals(expected, processed);
+    }
+
+    @Test
+    void transitivity_reduced4() {
         Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
                 'A', new DependencyData<>(Set.of(), true),
                 'B', new DependencyData<>(Set.of('A'), true),
@@ -134,5 +153,111 @@ class LayeredGraphTest {
         assertEquals(expected, processed);
     }
 
+    @Test
+    void transitivity_reduced5() {
+        Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A','B'), false),
+                'B', new DependencyData<>(Set.of('A'), false),
+                'A', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, IDependencyData<Character>> expected = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A'), false),
+                'B', new DependencyData<>(Set.of('A'), false),
+                'A', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, ? extends IDependencyData<Character>> processed = GraphProcessor.process(map);
+
+        assertEquals(expected, processed);
+    }
+
+    @Test
+    void transitivity_reduced6() {
+        Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A','B'), false),
+                'B', new DependencyData<>(Set.of('C','D'), false),
+                'C', new DependencyData<>(Set.of('A'), true),
+                'D', new DependencyData<>(Set.of('A'), true),
+                'A', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, IDependencyData<Character>> expected = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A'), false),
+                'B', new DependencyData<>(Set.of('C','D'), false),
+                'C', new DependencyData<>(Set.of('A'), true),
+                'D', new DependencyData<>(Set.of('A'), true),
+                'A', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, ? extends IDependencyData<Character>> processed = GraphProcessor.process(map);
+
+        assertEquals(expected, processed);
+    }
+
+    @Test
+    void transitivity_reduced7a() {
+        Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A','B', 'C'), false),
+                'A', new DependencyData<>(Set.of('B','C'), false),
+                'C', new DependencyData<>(Set.of(), true),
+                'B', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, IDependencyData<Character>> expected = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('B', 'C'), false),
+                'A', new DependencyData<>(Set.of('B','C'), false),
+                'C', new DependencyData<>(Set.of(), true),
+                'B', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, ? extends IDependencyData<Character>> processed = GraphProcessor.process(map);
+
+        assertEquals(expected, processed);
+    }
+
+    @Test
+    void transitivity_reduced7b() {
+        Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('A','B', 'C'), false),
+                'A', new DependencyData<>(Set.of('D'), true),
+                'D', new DependencyData<>(Set.of('B','C'), false),
+                'C', new DependencyData<>(Set.of(), true),
+                'B', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, IDependencyData<Character>> expected = new HashMap<>(Map.of(
+                'X', new DependencyData<>(Set.of('B', 'C'), false),
+                'A', new DependencyData<>(Set.of('D'), true),
+                'D', new DependencyData<>(Set.of('B','C'), false),
+                'C', new DependencyData<>(Set.of(), true),
+                'B', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, ? extends IDependencyData<Character>> processed = GraphProcessor.process(map);
+
+        assertEquals(expected, processed);
+    }
+
+    @Test
+    void disconnected_passes() {
+        Map<Character, IDependencyData<Character>> map = new HashMap<>(Map.of(
+                'A', new DependencyData<>(Set.of('B'), true),
+                'C', new DependencyData<>(Set.of('D'), true),
+                'B', new DependencyData<>(Set.of(), true),
+                'D', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, IDependencyData<Character>> expected = new HashMap<>(Map.of(
+                'A', new DependencyData<>(Set.of('B'), true),
+                'C', new DependencyData<>(Set.of('D'), true),
+                'B', new DependencyData<>(Set.of(), true),
+                'D', new DependencyData<>(Set.of(), true)
+        ));
+
+        Map<Character, ? extends IDependencyData<Character>> processed = GraphProcessor.process(map);
+
+        assertEquals(expected, processed);
+    }
 
 }

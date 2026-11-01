@@ -1,20 +1,18 @@
 package com.bonsai.pixelpets.pixelpets.registration.data;
 
-import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import net.minecraft.util.StringRepresentable;
 
-public enum Typing implements StringRepresentable {
+public enum PixelPetType implements StringRepresentable {
     MYTHICAL("mythical"),
-    SAVANNA("savanna"),
+    FLYING("flying"),
     ARCTIC("arctic"),
-    OCEAN("ocean"),
-    OVERWORLD("overworld"),
-    OTHER("other");
+    LAND("ocean"),
+    AQUATIC("overworld");
 
-    public static final StringRepresentable.EnumCodec<PixelPetStatus> CODEC = StringRepresentable.fromEnum(PixelPetStatus::values);
+    public static final StringRepresentable.EnumCodec<PixelPetType> CODEC = StringRepresentable.fromEnum(PixelPetType::values);
     private final String name;
 
-    Typing(String name) {
+    PixelPetType(String name) {
         this.name = name;
     }
 
@@ -23,7 +21,7 @@ public enum Typing implements StringRepresentable {
     }
 
     // Nullable
-    public static PixelPetStatus byName(String name) {
+    public static PixelPetType byName(String name) {
         return CODEC.byName(name);
     }
 

@@ -4,13 +4,14 @@ import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.entities.goals.PixelPetMeleeAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRangedAttackGoal;
 import com.bonsai.pixelpets.entities.goals.PixelPetRestWhenOrderedToGoal;
+import com.bonsai.pixelpets.entities.goals.PixelPetBuffGoal;
 import com.bonsai.pixelpets.pixelpets.PixelPet;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.PixelPetsInventory;
-import com.bonsai.pixelpets.pixelpets.registration.data.LeveledAttackData;
+import com.bonsai.pixelpets.pixelpets.registration.data.ability.LeveledAttackData;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
 import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
-import com.bonsai.pixelpets.pixelpets.registration.data.StatusEffectApplication;
+import com.bonsai.pixelpets.pixelpets.registration.data.ability.StatusEffectApplication;
 import com.bonsai.pixelpets.registry.ModAttributes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -22,6 +23,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -108,6 +110,8 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     private Goal currentAttackGoal = null;
     @Nullable
     private Goal activeTargetingGoal = null;
+    @Nullable
+    private PixelPetBuffGoal transientBuffGoal = null;
 
     public AbstractPixelPetEntity(EntityType<? extends TamableAnimal> entityType, Level level) {
         super(entityType, level);
@@ -142,7 +146,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         tag.putInt("ability_level", this.abilityLevel);
         tag.putString("status", this.status.getSerializedName());
 
-        tag.putBoolean("sleeping", this.isResting());
+        tag.putBoolean("resting", this.isResting());
     }
 
     @Override
@@ -169,10 +173,40 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         }
     }
 
+    public int getAbilityLevel() {
+        return this.abilityLevel;
+    }
+
     public void setAbilityLevel(int level) {
         this.abilityLevel = level;
         this.refreshAttack();
+        this.refreshTransientBuffs();
         // TODO other stuff that changes with level
+    }
+
+    private void refreshTransientBuffs() {
+        boolean hasTransientBuffs = this.getData()
+                .map(data -> !data.buff()
+                        .resolve(this.abilityLevel)
+                        .buffs()
+                        .isEmpty())
+                .orElse(false);
+
+        if (!hasTransientBuffs) {
+            if (this.transientBuffGoal != null) {
+                this.transientBuffGoal.cleanup();
+                this.goalSelector.removeGoal(this.transientBuffGoal);
+                this.transientBuffGoal = null;
+            }
+            return;
+        }
+
+        if (this.transientBuffGoal == null) {
+            this.transientBuffGoal = new PixelPetBuffGoal(this);
+            this.goalSelector.addGoal(5, this.transientBuffGoal);
+        } else {
+            this.transientBuffGoal.onAbilityLevelChanged();
+        }
     }
 
     private void refreshAttack() {
@@ -287,6 +321,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     }
 
     public float getRange() {
+        if (this.currentAttack == null) return 0.0f;
         AttributeInstance rangeAttr = this.getAttribute(ModAttributes.RANGE.holder());
         return (rangeAttr != null) ? (float) rangeAttr.getValue() : (this.currentAttack.isRanged() ? 10.0f : 0.0f);
     }
@@ -339,7 +374,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
                 // Other
                 .add(ModAttributes.RICOCHET.holder(), 0)
-                .add(ModAttributes.GROWING.holder(), 1)
+                .add(ModAttributes.GROWING.holder(), 0)
         ;
     }
 
@@ -383,14 +418,16 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         return super.mobInteract(player, hand);
     }
 
+    // TODO adding to storage instead of equip should despawn?
+    // TODO full inv should fail taming with msg display?
     private void tryToTame(Player player) {
-        if (this.random.nextInt(100) <= getTameChance()) {
+        if (this.random.nextInt(100) < getTameChance()) {
             // TODO add to player pet inv here
             //  If empty slot, auto equip and link uuid
             //  Else despawn
             ((PlayerPetAccess) player).pixelPets$addCaughtPet(this.getDataLocation());
             this.tame(player);
-            this.setStatus(this.status);
+            this.setStatus(((PlayerPetAccess) player).pixelPets$getPetInventory().petStatus);
             if (!this.level().isClientSide()) {
                 PixelPetsInventory petInv = ((PlayerPetAccess) player).pixelPets$getPetInventory();
                 
@@ -544,6 +581,25 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     @Override
     public void updateSwimming() {
         this.setSwimming(this.isInWater() && !this.isPassenger());
+    }
+
+    // TODO also clean up permanent buffs here
+    @Override
+    public void die(DamageSource damageSource) {
+        this.cleanupTransientBuffs();
+        super.die(damageSource);
+    }
+
+    @Override
+    public void remove(Entity.RemovalReason reason) {
+        this.cleanupTransientBuffs();
+        super.remove(reason);
+    }
+
+    private void cleanupTransientBuffs() {
+        if (this.transientBuffGoal != null) {
+            this.transientBuffGoal.cleanup();
+        }
     }
 
 }

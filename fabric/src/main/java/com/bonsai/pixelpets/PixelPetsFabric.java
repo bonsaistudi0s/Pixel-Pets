@@ -25,7 +25,7 @@ public class PixelPetsFabric implements ModInitializer {
         registerEntityAttributes();
 
         DynamicRegistries.registerSynced(PixelPets.PET_DATA, PixelPetData.CODEC, PixelPetData.CLIENT_CODEC);
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             PixelPets.scaredByMap = new HashMap<>();
             server.registryAccess().registryOrThrow(PixelPets.PET_DATA).holders().forEach(holder -> {
                 ResourceLocation id = holder.key().location();

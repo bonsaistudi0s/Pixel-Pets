@@ -1,4 +1,4 @@
-package com.bonsai.pixelpets.pixelpets.registration.data;
+package com.bonsai.pixelpets.pixelpets.registration.data.ability;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
@@ -47,7 +47,8 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
             Optional<Float> range,
             Optional<Integer> cooldown,
             Optional<EntityType<Projectile>> projectile,
-            Optional<List<StatusEffectApplication>> statusEffects
+            Optional<List<StatusEffectApplication>> statusEffects,
+            Optional<String> descriptionOverride
     ) {
         public static final Codec<PartialAttackData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.FLOAT.optionalFieldOf("damage").forGetter(PartialAttackData::damage),
@@ -62,7 +63,8 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
                         )
                         .optionalFieldOf("projectile")
                         .forGetter(PartialAttackData::projectile),
-                StatusEffectApplication.CODEC.listOf().optionalFieldOf("status_effects").forGetter(PartialAttackData::statusEffects)
+                StatusEffectApplication.CODEC.listOf().optionalFieldOf("status_effects").forGetter(PartialAttackData::statusEffects),
+                Codec.STRING.optionalFieldOf("description_override").forGetter(PartialAttackData::descriptionOverride)
         ).apply(instance, PartialAttackData::new));
 
         public PartialAttackData mergeWith(PartialAttackData next) {
@@ -72,7 +74,8 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
                     next.range.or(() -> this.range),
                     next.cooldown.or(() -> this.cooldown),
                     next.projectile.or(() -> this.projectile),
-                    next.statusEffects.or(() -> this.statusEffects)
+                    next.statusEffects.or(() -> this.statusEffects),
+                    next.descriptionOverride
             );
         }
 
@@ -80,10 +83,11 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
             return new PixelPetAttackData(
                     this.damage.orElse(4.0f),
                     this.knockback.orElse(0.0F),
-                    this.range.orElse(Float.NEGATIVE_INFINITY),
+                    this.range.orElse(Float.NEGATIVE_INFINITY), // True default applied in AbstractPixelPetEntity
                     this.cooldown.orElse(20),
                     this.projectile,
-                    this.statusEffects.orElse(List.of())
+                    this.statusEffects.orElse(List.of()),
+                    this.descriptionOverride
             );
         }
     }
@@ -94,7 +98,8 @@ public record LeveledAttackData(NavigableMap<Integer, PartialAttackData> keyfram
             float range,
             int cooldown,
             Optional<EntityType<Projectile>> projectile,
-            List<StatusEffectApplication> statusEffects
+            List<StatusEffectApplication> statusEffects,
+            Optional<String> descriptionOverride
     ) {
         // Note: Because ranged vs melee is determined by projectile,
         // a melee pet can become a ranged pet, but a ranged pet cannot become a melee pet

@@ -1,6 +1,5 @@
 package com.bonsai.pixelpets.pixelpets;
 
-import com.bonsai.pixelpets.PixelPets;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -31,6 +30,11 @@ public class PixelPetsInventory {
                 pet.tick(this.player.level(), this.player);
             }
         }
+    }
+
+    // Simple approach, might be a better way?
+    public void replaceWith(PixelPetsInventory other) {
+        this.load(other.save(new CompoundTag()));
     }
 
     public CompoundTag save(CompoundTag compoundTag) {

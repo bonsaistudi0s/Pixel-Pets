@@ -3,6 +3,9 @@
 Put a description of smth here
 
 # PixelPetData JSON Format
+This is a big section that can be quite daunting. I recommend looking at the complete examples at the
+bottom to get a feel for how average/normal pets are defined, and then going into further depth as you create your own.
+
 
 ## `entity_type`
 - **Required:** Yes
@@ -40,7 +43,7 @@ Put a description of smth here
 
 ## `rarity`
 - **Required:** No
-- **Type:** `Rarity`
+- **Type:** `PixelPetRarity`
 - **Default:** `common`
 - **Description:** Rarity of the pet.
 
@@ -52,6 +55,25 @@ Put a description of smth here
 - `rare`
 - `epic`
 - `legendary`
+
+</details>
+
+---
+
+## `typings`
+- **Required:** No
+- **Type:** List of `PixelPetTyping`
+- **Default:** Empty list
+- **Description:** List of typings that define this pet and allow other pets to target it.
+
+<details>
+  <summary> Accepted values: </summary>
+
+- `mythical`
+- `flying`
+- `land`
+- `aquatic`
+- `arctic`
 
 </details>
 
@@ -470,7 +492,7 @@ A different attack can be assigned to each level, like this:
     "2": PixelPetAttackData{},
     "3": PixelPetAttackData{},
     "4": PixelPetAttackData{},
-    "5": PixelPetAttackData{},
+    "5": PixelPetAttackData{}
 }
 ```
 But this is wasteful, since typically only a few things will change per level. </br>
@@ -490,7 +512,7 @@ For example, if we have an attack that only changes by dealing more damage each 
     },
     "5": {
       "damage": 8.0,
-    },
+    }
 }
 ```
 All the other data about the attack stays the same as it was defined in level 1, and the damage gets updated each level. </br>
@@ -540,6 +562,17 @@ All the other data about the attack stays the same as it was defined in level 1,
 
 ---
 
+### `description_override`
+- **Required:** No
+- **Type:** `String`
+- **Default:** Ignored
+- **Description:** Pixel Pets will try to generate a full description of your pet, including per-level information.
+If you prefer to write the description yourself, you can use this to override the generated description for this level.
+  - The data here should be a key in the lang file to accommodate translation
+  - https://minecraft.wiki/w/Formatting_codes
+
+---
+
 ### `status_effects`
 - **Required:** No
 - **Type:** List of `StatusEffectApplication`
@@ -583,39 +616,375 @@ All the other data about the attack stays the same as it was defined in level 1,
 
 </details>
 
-Here is a complete example. </br>
+<details>
+    <summary> Detailed Example: </summary>
+
 This attack starts as a 0 damage melee at level 1, with a 50% chance to inflict poison-2 for 5 seconds. </br>
 At level 3, it becomes an arced ranged attack for 1 damage, and inflicts glowing on hit. </br>
 At level 5, it shoots vanilla snowballs every 4 ticks, and at higher range.
-<details>
-    <summary> Example: </summary>
-
-    "attack": {
-        "1": {
-            "damage": 0,
-            "status_effects": [
-                {
-                    "effect": "minecraft:poison",
-                    "amplifier": 2,
-                    "duration": 100,
-                    "chance": 0.5
-                }
-            ]
-        },
-        "3": {
-            "damage": 1,
-            "projectile": "pixelpets:lobbed_pet_projectile",
-            "status_effects": [
-                {
-                    "effect": "minecraft:glowing"
-                }
-            ]
-        },
-        "5": {
-            "cooldown": 5,
-            "range": 15,
-            "projectile": "minecraft:snowball"
-        }
+```json
+"attack": {
+    "1": {
+        "damage": 0,
+        "status_effects": [
+            {
+                "effect": "minecraft:poison",
+                "amplifier": 2,
+                "duration": 100,
+                "chance": 0.5
+            }
+        ]
+    },
+    "3": {
+        "damage": 1,
+        "projectile": "pixelpets:lobbed_pet_projectile",
+        "status_effects": [
+            {
+                "effect": "minecraft:glowing"
+            }
+        ]
+    },
+    "5": {
+        "cooldown": 5,
+        "range": 15,
+        "projectile": "minecraft:snowball"
     }
+}
+```
+
+</details>
+
+---
+
+## `buff`
+- **Required:** No
+- **Type:** `LeveledBuffData`
+- **Default:** No buffs
+- **Description:** Defines how the pet buff, and how their buffs change as they level
+
+Pets start at level 1 and can progress to level 5. </br>
+Each level accepts a list of possible buffs:
+<details>
+    <summary> Wasteful Example </summary>
+
+```json
+"buff": {
+    "1": [
+        BuffData{},
+        BuffData{},
+        ...
+    ],
+    "2": [
+        BuffData{},
+        BuffData{},
+        ...
+    ],
+    "3": [
+        BuffData{},
+        BuffData{},
+        ...
+    ],
+    "4": [
+        BuffData{},
+        BuffData{},
+        ...
+    ],
+    "5": [
+        BuffData{},
+        BuffData{},
+        ...
+    ]
+}
+```
+
+</details>
+
+But this is wasteful, since typically only a few things will change per level, or even per buff. </br>
+Like `attack`, this system allows you to define only the parts that will change each level, but it's a bit more complicated because a pet can have multiple different buffing abilities. </br>
+Each buff has an `id`, and the system will merge/update the data based on matching these ids. </br>
+For example, if we have a buff that only changes by decreasing cooldown each level, we could define it like this:
+
+<details>
+    <summary> Cooldown Example </summary>
+
+```json
+"buff": {
+    "1": [
+      {
+        "id":"ExampleBuff",
+        "cooldown": 1000
+        ... rest of the data
+      },
+      {
+        "id":"OtherBuff",
+        "cooldown": 1000
+        ... rest of the data
+      }
+    ],
+    "2": [
+      {
+        "id":"ExampleBuff",
+        "cooldown": 800
+      }
+    ], 
+    "3": [
+      {
+        "id":"ExampleBuff",
+        "cooldown": 600
+      }
+    ],
+    "4": [
+      {
+        "id":"ExampleBuff",
+        "cooldown": 400
+      }
+    ],
+    "5": [
+      {
+        "id":"ExampleBuff",
+        "cooldown": 200
+      }
+    ]
+}
+```
+
+</details>
+
+All the other data about `ExampleBuff` stays the same as it was defined in level 1, but the cooldown gets updated each level. </br>
+`OtherBuff` is left completely the same as it was first defined, since the changes only specify `ExampleBuff` </br>
+Unfortunately, much like with `attack`, changes to the list of status effects/attribute modifiers will require redefining the whole list. </br>
+For example:
+
+<details>
+  <summary> StatusEffect Example: </summary>
+
+```json
+"buff": {
+    "1": [
+      {
+        "id":"ExampleBuff",
+        "status_effects": [
+          {
+            "effect": "minecraft:regeneration",
+            "duration": 100,
+          }
+        ]
+      }
+    ],
+    "2": [
+      {
+        "id":"ExampleBuff",
+        "status_effects": [
+          {
+            "effect": "minecraft:regeneration",
+            "duration": 200,
+          }
+        ]
+      }
+    ],
+    "3": [
+      {
+        "id":"ExampleBuff",
+        "status_effects": [
+          {
+            "effect": "minecraft:regeneration",
+            "duration": 300,
+          }
+        ]
+      }
+    ],
+    "4": [
+      {
+        "id":"ExampleBuff",
+        "status_effects": [
+          {
+            "effect": "minecraft:regeneration",
+            "duration": 400,
+          }
+        ]
+      }
+    ],
+    "5": [
+      {
+        "id":"ExampleBuff",
+        "status_effects": [
+          {
+            "effect": "minecraft:regeneration",
+            "duration": 500,
+          }
+        ]
+      }
+    ]
+}
+```
+
+</details>
+
+#### Now back to the json formatting!
+
+<details>
+  <summary> PixelPetBuffData format: </summary>
+
+### `id`
+- **Required:** Yes
+- **Type:** `String`
+- **Default:** None
+- **Description:** The unique name of this buff.
+
+---
+
+### `cooldown`
+- **Required:** No
+- **Type:** `int`
+- **Default:** `200`
+- **Description:** Tick delay between application attempts of this buff. First application is always immediate
+
+---
+
+### `targets`
+- **Required:** No
+- **Type:** `BuffTarget`
+- **Default:** Only target the casting pet
+- **Description:** Who the buff should try to apply to.
+
+    <details>
+      <summary> BuffTarget example: </summary>
+        
+    Using an example here because it's simpler. </br>
+    Defaults to `true`, `false`, `false`, so ignore the fields that already match your case </br>
+    ```json
+    "targets": {
+        "self": true/false
+        "owner": true/false
+        "other_pets": true/false
+    }
+    ```
+    
+    </details>
+
+
+---
+
+### `conditions`
+- **Required:** No
+- **Type:** List of `EntityCondition`
+- **Default:** No conditionals
+- **Description:** List of conditions the buff target must meet before the buff can be applied.
+
+  <details>
+    <summary> EntityCondition: </summary>
+
+  `EntityCondition` can be thought of as pick-and-choose. You define the type of condition you want, and then only fill out the data relevant to that type.
+  For example, if you want the buff to only apply to targets who are wet, there's no reason to also give a list of biomes. </br>
+
+  #### Data Input
+  - `type`: The name of the condition. Full list provided below.
+  - `invert`: Whether to use the OPPOSITE of the condition check.
+  - `min`: A minimum number, for tests like Height.
+  - `max`: A maximum number, for tests like Height.
+  - `status_effects`: A list of status effects.
+  - `biomes`: A biome / biome-tag / list of biomes/biome-tags.
+  - `blocks`: A block / block-tag / list of blocks/block-tags. 
+  - `rarities`: A list of PixelPetRarity
+  - `types`: A list of PixelPetType
+
+  #### Condition Types
+  Types with `pet` in the name are only compatible with PixelPets. </br>
+  Types with `player` in the name are only compatible with players. </br>
+    TODO descriptions/data requirements?
+  - `is_pet_ranged`
+  - `is_pet_melee`
+  - `is_pet_rarity`
+  - `is_pet_any_types`
+  - `is_pet_all_types`
+  - `player_pets_equipped`
+  - `always_true`
+  - `health_percent`
+  - `has_status_effect`
+  - `has_negative_effect`
+  - `in_biome`
+  - `on_block`
+  - `in_water`
+  - `is_wet`
+  - `is_day`
+  - `is_swimming`
+  - `is_sprinting`
+  - `is_crouching`
+  - `is_glowing`
+  - `on_ground`
+  - `on_fire`
+  - `in_lava`
+  - `is_raining`
+  - `is_thundering`
+  - `height`
+  - `biome_temperature`
+
+  </details>
+
+---
+
+### `status_effects`
+- **Required:** No
+- **Type:** List of `StatusEffectApplication`
+- **Default:** Empty list
+- **Description:** StatusEffects to try to apply.
+  - See `attack` for formatting, it's the same
+
+---
+
+### `attribute_modifiers`
+- **Required:** No
+- **Type:** List of `AttributeModifierApplication`
+- **Default:** Empty list
+- **Description:** AttributeModifiers to try to apply.
+
+    <details>
+        <summary> AttributeModifierApplication format: </summary>
+
+    ### `attribute`
+    - **Required:** Yes
+    - **Type:** `Attribute`
+    - **Default:** None
+    - **Description:** The attribute to affect.
+      - Be aware that attribute names changed in 1.21.2
+      - Old MC wiki page: https://minecraft.wiki/w/Attribute?oldid=2663201
+      - 1.21.1 MC Code: https://mcsrc.dev/2/1.21.1/net/minecraft/world/entity/ai/attributes/Attributes
+
+    ---
+
+    ### `modifier`
+    - **Required:** Yes
+    - **Type:** `AttributeModifier`
+    - **Default:** None
+    - **Description:** The custom name, value, and operation to use.
+  
+    <details>
+        <summary> AttributeModifier example: </summary>
+        
+    Worth reading this: https://minecraft.wiki/w/Attribute#Modifiers </br>
+    The `id` is custom, and should be made unique to your pet/buff </br>
+    The `amount` is `float` value, note that each attribute has a range of valid values </br>
+    The `operation` is how the modifier should be applied to the attribute and other modifiers.
+    ```json
+    "modifier": {
+      "id": "pixelpets:platypus.scale",
+      "amount": 1.0,
+      "operation": "add_value"
+    }
+    ```
+
+    </details>
+ 
+    </details>
+
+---
+
+### `particles`
+- **Required:** No
+- **Type:** `ParticleData`
+- **Default:** None
+- **Description:** Particles to spawn on the target when the buff is applied.
+    - Leave blank if you don't want any particles
+    - Note that the particles will only play if the target isn't affected by the buff already. This is to stop particle spam.
 
 </details>
