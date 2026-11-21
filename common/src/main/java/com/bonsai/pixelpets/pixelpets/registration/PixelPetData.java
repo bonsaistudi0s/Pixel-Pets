@@ -54,7 +54,7 @@ public record PixelPetData(
     public static final PixelPetRarity DEFAULT_RARITY = PixelPetRarity.COMMON;
     public static final List<PixelPetType> DEFAULT_PET_TYPES = List.of();
     public static final SpawnData DEFAULT_SPAWN_DATA = new SpawnData();
-    public static final ProjectileRenderData DEFAULT_PROJECTILE_RENDER_DATA = new ProjectileRenderData.ItemBased(() -> Items.SNOWBALL, 1.0f, false);
+    public static final ProjectileRenderData DEFAULT_PROJECTILE_RENDER_DATA = new ProjectileRenderData.ItemBased(() -> Items.SNOWBALL, 1.0f, false, Optional.empty());
 
     public static final Codec<PixelPetData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ResourceLocation.CODEC

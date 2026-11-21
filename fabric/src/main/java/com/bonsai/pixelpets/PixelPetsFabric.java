@@ -1,14 +1,13 @@
 package com.bonsai.pixelpets;
 
-import com.bonsai.pixelpets.client.PixelPetScreenRenderingUtil;
 import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
 import com.bonsai.pixelpets.registry.*;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
+import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
@@ -24,6 +23,7 @@ public class PixelPetsFabric implements ModInitializer {
 
         registerEntityAttributes();
 
+        FabricRegistryBuilder.from(PixelPets.TARGET_CONDITION_TYPES).buildAndRegister();
         DynamicRegistries.registerSynced(PixelPets.PET_DATA, PixelPetData.CODEC, PixelPetData.CLIENT_CODEC);
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             PixelPets.scaredByMap = new HashMap<>();

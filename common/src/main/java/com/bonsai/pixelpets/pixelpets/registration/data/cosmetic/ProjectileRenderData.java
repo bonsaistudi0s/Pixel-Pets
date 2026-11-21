@@ -15,9 +15,9 @@ import java.util.function.Supplier;
 
 public sealed interface ProjectileRenderData {
 
-    // TODO could also encode particle trails
     float scale();
     boolean fullBright();
+    Optional<ParticleData> trail();
 
     Codec<ProjectileRenderData> CODEC = Codec.STRING.partialDispatch(
             "type",
@@ -32,7 +32,7 @@ public sealed interface ProjectileRenderData {
             }
     );
 
-    record Modeled(ResourceLocation model, ResourceLocation texture, ResourceLocation animation, float scale, boolean fullBright) implements ProjectileRenderData {
+    record Modeled(ResourceLocation model, ResourceLocation texture, ResourceLocation animation, float scale, boolean fullBright, Optional<ParticleData> trail) implements ProjectileRenderData {
 
         public static final ResourceLocation DEFAULT_ID = PixelPets.id("empty_pet_projectile");
 
@@ -41,20 +41,23 @@ public sealed interface ProjectileRenderData {
                 ResourceLocation.CODEC.optionalFieldOf("texture").forGetter(m -> Optional.of(m.texture())),
                 ResourceLocation.CODEC.optionalFieldOf("animation", DEFAULT_ID).forGetter(Modeled::animation),
                 Codec.FLOAT.optionalFieldOf("scale", 1.0f).forGetter(Modeled::scale),
-                Codec.BOOL.optionalFieldOf("full_bright", false).forGetter(Modeled::fullBright)
+                Codec.BOOL.optionalFieldOf("full_bright", false).forGetter(Modeled::fullBright),
+                ParticleData.CODEC.optionalFieldOf("particle_trail").forGetter(Modeled::trail)
 
-                ).apply(instance, (model, texture, animation, scale, fullBright) ->
-                new Modeled(model, texture.orElse(model), animation, scale, fullBright)
+
+        ).apply(instance, (model, texture, animation, scale, fullBright, trail) ->
+                new Modeled(model, texture.orElse(model), animation, scale, fullBright, trail)
         ));
     }
 
-    record ItemBased(Supplier<Item> item, float scale, boolean fullBright) implements ProjectileRenderData {
+    record ItemBased(Supplier<Item> item, float scale, boolean fullBright, Optional<ParticleData> trail) implements ProjectileRenderData {
 
         static final MapCodec<ItemBased> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 BuiltInRegistries.ITEM.byNameCodec().optionalFieldOf("item", Items.SNOWBALL).forGetter(data -> data.item().get()),
                 Codec.FLOAT.optionalFieldOf("scale", 1.0f).forGetter(ItemBased::scale),
-                Codec.BOOL.optionalFieldOf("full_bright", false).forGetter(ItemBased::fullBright)
+                Codec.BOOL.optionalFieldOf("full_bright", false).forGetter(ItemBased::fullBright),
+                ParticleData.CODEC.optionalFieldOf("particle_trail").forGetter(ItemBased::trail)
 
-        ).apply(instance, (item, scale, fullBright) -> new ItemBased(() -> item, scale, fullBright)));
+        ).apply(instance, (item, scale, fullBright, trail) -> new ItemBased(() -> item, scale, fullBright, trail)));
     }
 }

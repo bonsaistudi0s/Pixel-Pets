@@ -32,7 +32,6 @@ public class PixelPetsNeoforgeClient {
         event.registerEntityRenderer(ModEntities.LOBBED_PET_PROJECTILE.get(), PixelPetProjectileRenderer::new);
     }
 
-    // TODO test
     public static void registerDependencyGraph(ClientPlayerNetworkEvent.LoggingIn event) {
         PixelPetScreenRenderingUtil.getGraph();
     }

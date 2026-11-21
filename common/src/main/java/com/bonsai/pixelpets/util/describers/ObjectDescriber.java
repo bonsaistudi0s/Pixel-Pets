@@ -75,14 +75,35 @@ public interface ObjectDescriber<T> {
     }
 
     static MutableComponent joinClauses(List<Component> clauses) {
-        MutableComponent result = Component.empty();
-        int len = clauses.size();
-        for (int i = 0; i < len; i++) {
-            if (i > 0) {
-                result.append(Component.literal(i == len - 1 ? (len > 2 ? ", and " : " and ") : ", "));
-            }
+        return joinClauses(clauses, "and");
+    }
+
+    static MutableComponent joinClauses(List<Component> clauses, String conjunction) {
+        if (clauses.isEmpty()) {
+            return Component.empty();
+        }
+
+        MutableComponent result = clauses.getFirst().copy();
+
+        for (int i = 1; i < clauses.size(); i++) {
+            result.append(Component.literal(i == clauses.size() - 1 ? (clauses.size() > 2 ? ", " + conjunction + " " : " " + conjunction + " ") : ", "));
             result.append(clauses.get(i));
         }
+
+        return result;
+    }
+
+    static Component multiLine(List<Component> lines) {
+        MutableComponent result = Component.empty();
+
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) {
+                result.append("\n");
+            }
+
+            result.append(lines.get(i));
+        }
+
         return result;
     }
 

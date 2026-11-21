@@ -12,8 +12,10 @@ import com.bonsai.pixelpets.pixelpets.registration.data.ability.LeveledAttackDat
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
 import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
 import com.bonsai.pixelpets.pixelpets.registration.data.ability.StatusEffectApplication;
+import com.bonsai.pixelpets.pixelpets.registration.data.cosmetic.ParticleData;
 import com.bonsai.pixelpets.registry.ModAttributes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -56,8 +58,11 @@ import java.util.function.Predicate;
 
 // TODO sometimes hesitant to attack player instructed targets?
 // TODO keeps attacking even if player gets too far away
+// TODO account for custom name, ask joosh
+
+// TODO stops attacking when out of range, forgets target and won't fight back if they continue attacking
 public abstract class AbstractPixelPetEntity extends TamableAnimal implements GeoEntity, RangedAttackMob {
-    /// Geckolib </br>
+    /// ### Geckolib </br>
     /// DevNote: Make sure the animations in *.animation.json match the form below
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     public static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.walk");
@@ -103,7 +108,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
 
     private int abilityLevel = 1;
     private PixelPetStatus status = PixelPetStatus.PASSIVE;
-    private LeveledAttackData.PixelPetAttackData currentAttack = null;
+    private LeveledAttackData.AttackData currentAttack = null;
     private EntityType<Projectile> projectile = null;
 
     @Nullable
@@ -210,7 +215,7 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
     }
 
     private void refreshAttack() {
-        LeveledAttackData.PixelPetAttackData resolved = getData().flatMap(data -> data.attack().resolve(this.abilityLevel)).orElse(null);
+        LeveledAttackData.AttackData resolved = getData().flatMap(data -> data.attack().resolve(this.abilityLevel)).orElse(null);
 
         // Attribute setting
         if (resolved != null) {
@@ -343,6 +348,23 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         AttributeInstance growingAttr = this.getAttribute(ModAttributes.GROWING.holder());
         return (growingAttr != null) ? (int) growingAttr.getValue() : 0;
     }
+
+    public Optional<ParticleData> getOnHitParticles() {
+        if (this.currentAttack == null) return Optional.empty();
+        return this.currentAttack.particles();
+    }
+
+    public void summonParticlesOnHit(LivingEntity target) {
+        Optional<ParticleData> particles = this.getOnHitParticles();
+        if (particles.isPresent()) {
+            if (particles.get().particleType() instanceof SimpleParticleType particleType) {
+                if (this.level() instanceof ServerLevel serverLevel) {
+                    serverLevel.sendParticles(particleType, target.getX(), target.getY() + (target.getBbHeight() / 2.0), target.getZ(), particles.get().count(), 0.5, 0.5, 0.5, 0.0);
+                }
+            }
+        }
+    }
+
 
     public void setResting(boolean resting) {
         this.entityData.set(RESTING, resting);
@@ -583,7 +605,6 @@ public abstract class AbstractPixelPetEntity extends TamableAnimal implements Ge
         this.setSwimming(this.isInWater() && !this.isPassenger());
     }
 
-    // TODO also clean up permanent buffs here
     @Override
     public void die(DamageSource damageSource) {
         this.cleanupTransientBuffs();

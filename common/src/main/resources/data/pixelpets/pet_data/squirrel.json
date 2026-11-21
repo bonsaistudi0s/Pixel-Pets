@@ -22,7 +22,11 @@
           "duration": 100,
           "chance": 0.5
         }
-      ]
+      ],
+      "particles": {
+        "particle_type": "minecraft:glow",
+        "count": 10
+      }
     },
     "3": {
       "damage": 1,

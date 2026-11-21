@@ -111,6 +111,7 @@ public class PixelPetMeleeAttackGoal extends Goal {
             this.resetAttackCooldown();
             this.mob.swing(InteractionHand.MAIN_HAND);
             this.mob.doHurtTarget(target);
+            this.mob.summonParticlesOnHit(target);
         }
 
     }

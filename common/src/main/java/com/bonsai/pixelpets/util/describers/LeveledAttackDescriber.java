@@ -12,19 +12,15 @@ public class LeveledAttackDescriber extends LeveledDescriber<LeveledAttackData> 
     private final StatusEffectDescriber statusEffectDescriber;
 
     public LeveledAttackDescriber() {
-        this(new StatusEffectDescriber());
-    }
-
-    public LeveledAttackDescriber(StatusEffectDescriber statusEffectDescriber) {
-        this.statusEffectDescriber = Objects.requireNonNull(statusEffectDescriber);
+        this.statusEffectDescriber = new StatusEffectDescriber();
     }
 
     @Override
     protected void generateDescriptions(LeveledAttackData data) {
-        LeveledAttackData.PixelPetAttackData previous = null;
+        LeveledAttackData.AttackData previous = null;
 
         for (int level = 1; level <= LEVEL_COUNT; level++) {
-            Optional<LeveledAttackData.PixelPetAttackData> resolved = data.resolve(level);
+            Optional<LeveledAttackData.AttackData> resolved = data.resolve(level);
 
             if (resolved.isEmpty()) {
                 setLevelDescription(level, Component.empty());
@@ -33,7 +29,7 @@ public class LeveledAttackDescriber extends LeveledDescriber<LeveledAttackData> 
             }
 
             Component description;
-            LeveledAttackData.PixelPetAttackData current = resolved.get();
+            LeveledAttackData.AttackData current = resolved.get();
             if (current.descriptionOverride().isPresent()) {
                 description = Component.translatable(current.descriptionOverride().get());
             } else {
@@ -45,7 +41,7 @@ public class LeveledAttackDescriber extends LeveledDescriber<LeveledAttackData> 
         }
     }
 
-    private Component describeInitialAttack(LeveledAttackData.PixelPetAttackData attack) {
+    private Component describeInitialAttack(LeveledAttackData.AttackData attack) {
         List<Component> clauses = new ArrayList<>();
 
         boolean ranged = attack.isRanged();
@@ -79,7 +75,7 @@ public class LeveledAttackDescriber extends LeveledDescriber<LeveledAttackData> 
         return output;
     }
 
-    private Component describeChanges(LeveledAttackData.PixelPetAttackData previous, LeveledAttackData.PixelPetAttackData current) {
+    private Component describeChanges(LeveledAttackData.AttackData previous, LeveledAttackData.AttackData current) {
         List<Component> clauses = new ArrayList<>();
 
         // Attack type / range
@@ -137,87 +133,31 @@ public class LeveledAttackDescriber extends LeveledDescriber<LeveledAttackData> 
         }
 
         // Status effects
-        Optional<Component> statusEffectChanges = describeStatusEffectChanges(previous.statusEffects(), current.statusEffects());
+        List<Component> effectChanges = new ArrayList<>();
+        ChangingObjectDescriber.describeObjectChanges(
+                statusEffectDescriber,
+                statusEffectDescriber::describeSimply,
+                previous.statusEffects(),
+                current.statusEffects(),
+                "applies"
+        ).ifPresent(effectChanges::add);
 
         // Nothing changed
-        if (clauses.isEmpty() && statusEffectChanges.isEmpty()) {
+        if (clauses.isEmpty() && effectChanges.isEmpty()) {
             return Component.empty();
         }
 
         MutableComponent description = Component.empty();
         if (!clauses.isEmpty()) {
-            clauses.set(0, ObjectDescriber.capitalizeFirst(clauses.getFirst()));
-            description.append(ObjectDescriber.joinClauses(clauses)).append(Component.literal("."));
+            description.append(ObjectDescriber.capitalizeFirst(ObjectDescriber.joinClauses(clauses)));
         }
 
-        statusEffectChanges.ifPresent(statusEffects -> {
-            if (!clauses.isEmpty()) {
-                description.append("\n");
-            }
-
-            description.append(statusEffects);
-        });
+        if (!effectChanges.isEmpty()) {
+            description.append("\n");
+            description.append(ObjectDescriber.multiLine(effectChanges));
+        }
 
         return description;
-    }
-
-    private Optional<Component> describeStatusEffectChanges(List<StatusEffectApplication> previous, List<StatusEffectApplication> current) {
-        var differences = statusEffectDescriber.findDifferences(previous, current);
-
-        List<Component> changes = new ArrayList<>();
-
-        // Modified effects
-        for (var modification : differences.modified()) {
-            changes.add(
-                    statusEffectDescriber.describeSimply(modification.previous())
-                            .copy()
-                            .append(Component.literal(" changes "))
-                            .append(statusEffectDescriber.describeModification(modification))
-                            .append(Component.literal("."))
-            );
-        }
-
-        // Removed effects
-        if (!differences.removed().isEmpty()) {
-            changes.add(
-                    Component.literal("No longer applies: ")
-                            .append(ObjectDescriber.joinClauses(
-                                    differences.removed().stream()
-                                            .map(statusEffectDescriber::describeSimply)
-                                            .toList()
-                            ))
-                            .append(Component.literal("."))
-            );
-        }
-
-        // Added effects
-        if (!differences.added().isEmpty()) {
-            changes.add(
-                    Component.literal("Now also applies: ")
-                            .append(ObjectDescriber.joinClauses(
-                                    differences.added().stream()
-                                            .map(statusEffectDescriber::describe)
-                                            .toList()
-                            ))
-                            .append(Component.literal("."))
-            );
-        }
-
-        if (changes.isEmpty()) {
-            return Optional.empty();
-        }
-
-        MutableComponent result = Component.empty();
-
-        for (int i = 0; i < changes.size(); i++) {
-            if (i > 0) {
-                result.append(Component.literal("\n"));
-            }
-            result.append(changes.get(i));
-        }
-
-
-        return Optional.of(result);
     }
 
 }

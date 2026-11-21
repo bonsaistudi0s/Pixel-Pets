@@ -62,63 +62,70 @@
     }
   },
   "buff": {
-    "1": [
-      {
-        "id": "glow",
-        "cooldown": 200,
-        "conditions": [
-          {
-            "type": "is_day"
-          }
-        ],
-        "status_effects": [
-          {
-            "effect": "minecraft:glowing",
-            "duration": 100
-          }
-        ]
-      }
-    ],
-    "2": [
-      {
-        "id": "glow",
-        "cooldown": 100,
-        "targets": {
-          "self": true,
-          "owner": true
+    "1": {
+      "buffs" : [
+        {
+          "id": "glow",
+          "cooldown": 200,
+          "conditions": [
+            {
+              "type": "pixelpets:in_water"
+            }
+          ],
+          "status_effects": [
+            {
+              "effect": "minecraft:glowing",
+              "duration": 100
+            }
+          ]
         }
-      }
-    ],
-    "3": [
-      {
-        "id": "glow",
-        "targets": {
-          "self": true,
-          "owner": true,
-          "other_pets": true
+      ]
+    },
+    "2":
+    {
+      "buffs" : [
+        {
+          "id": "glow",
+          "cooldown": 100,
+          "targets": {
+            "self": true,
+            "owner": true
+          }
         }
-      }
-    ],
-    "4": [
-      {
-        "id": "strength",
-        "cooldown": 200,
-        "conditions": [
-          {
-            "type": "in_water"
+      ],
+      "3": [
+        {
+          "id": "glow",
+          "targets": {
+            "self": true,
+            "owner": true,
+            "other_pets": true
           }
-        ],
-        "targets": {
-          "owner": true
-        },
-        "status_effects": [
-          {
-            "effect": "minecraft:strength",
-            "amplifier": 4,
-            "duration": 100
-          }
-        ]
-      }
-    ]
+        }
+      ]
+    },
+    "4": {
+     "buffs": [
+       {
+         "id": "strength",
+         "cooldown": 200,
+         "conditions": [
+           {
+             "type": "pixelpets:in_water"
+           }
+         ],
+         "targets": {
+           "owner": true
+         },
+         "status_effects": [
+           {
+             "effect": "minecraft:strength",
+             "amplifier": 4,
+             "duration": 100
+           }
+         ]
+       }
+     ]
+    }
   }
 }

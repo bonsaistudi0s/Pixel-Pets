@@ -5,9 +5,11 @@ import com.bonsai.pixelpets.entities.AbstractPixelPetEntity;
 import com.bonsai.pixelpets.pixelpets.PixelPetStatus;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
 import com.bonsai.pixelpets.pixelpets.registration.data.ability.LeveledAttackData;
+import com.bonsai.pixelpets.pixelpets.registration.data.ability.LeveledBuffData;
 import com.bonsai.pixelpets.pixelpets.registration.data.spawning.PetDependencyData;
 import com.bonsai.pixelpets.util.*;
 import com.bonsai.pixelpets.util.describers.LeveledAttackDescriber;
+import com.bonsai.pixelpets.util.describers.LeveledBuffDescriber;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Holder;
@@ -37,6 +39,8 @@ public class PixelPetScreenRenderingUtil {
 
     private static final Map<ResourceLocation, LivingEntity> ENTITIES = new HashMap<>();
     private static final Map<ResourceLocation, LeveledAttackDescriber> LEVELED_ATTACK_DESCRIPTIONS = new HashMap<>();
+    private static final Map<ResourceLocation, LeveledBuffDescriber> LEVELED_BUFF_DESCRIPTIONS = new HashMap<>();
+    private static final int DESCRIPTIONS_MAX_SIZE = 16; // To prevent keeping too much data loaded, IDK if necessary
 
     private static ClientLevel cachedLevel;
 
@@ -86,11 +90,16 @@ public class PixelPetScreenRenderingUtil {
             if (data == null) return null;
 
             // fixme testing stuff, delete when done
-            LeveledAttackData attack = data.attack();
-            LeveledAttackDescriber attackDescriber = new LeveledAttackDescriber();
-            attackDescriber.generate(attack);
+//            LeveledAttackData attack = data.attack();
+//            LeveledAttackDescriber attackDescriber = new LeveledAttackDescriber();
+//            attackDescriber.generate(attack);
+//            PixelPets.LOGGER.info(key.toString());
+//            Arrays.stream(attackDescriber.getLevelDescriptions()).forEach(component -> PixelPets.LOGGER.info(component.getString()));
+            LeveledBuffData buff = data.buff();
+            LeveledBuffDescriber buffDescriber = new LeveledBuffDescriber();
+            buffDescriber.generate(buff);
             PixelPets.LOGGER.info(key.toString());
-            Arrays.stream(attackDescriber.getLevelDescriptions()).forEach(component -> PixelPets.LOGGER.info(component.getString()));
+            Arrays.stream(buffDescriber.getLevelDescriptions()).forEach(component -> PixelPets.LOGGER.info(component.getString()));
 
             return createEntity(key, data, level);
         });
@@ -102,6 +111,10 @@ public class PixelPetScreenRenderingUtil {
 
         if (level == null) {
             return null;
+        }
+
+        if (LEVELED_ATTACK_DESCRIPTIONS.size() >= DESCRIPTIONS_MAX_SIZE) {
+            LEVELED_ATTACK_DESCRIPTIONS.clear();
         }
 
         return LEVELED_ATTACK_DESCRIPTIONS.computeIfAbsent(id, key -> {
@@ -119,6 +132,36 @@ public class PixelPetScreenRenderingUtil {
             attackDescriber.generate(attack);
 
             return attackDescriber;
+        });
+    }
+
+    public static LeveledBuffDescriber getBuffDescriptions(ResourceLocation id) {
+        Minecraft minecraft = Minecraft.getInstance();
+        ClientLevel level = minecraft.level;
+
+        if (level == null) {
+            return null;
+        }
+
+        if (LEVELED_BUFF_DESCRIPTIONS.size() >= DESCRIPTIONS_MAX_SIZE) {
+            LEVELED_BUFF_DESCRIPTIONS.clear();
+        }
+
+        return LEVELED_BUFF_DESCRIPTIONS.computeIfAbsent(id, key -> {
+            RegistryAccess registries = level.registryAccess();
+
+            PixelPetData data = registries.lookup(PET_DATA)
+                    .flatMap(registry -> registry.get(ResourceKey.create(PET_DATA, key)))
+                    .map(Holder::value)
+                    .orElse(null);
+
+            if (data == null) return null;
+
+            LeveledBuffData buff = data.buff();
+            LeveledBuffDescriber buffDescriber = new LeveledBuffDescriber();
+            buffDescriber.generate(buff);
+
+            return buffDescriber;
         });
     }
 

@@ -11,6 +11,10 @@ public class BuffTargetDescriber implements ObjectDescriber<BuffTarget> {
 
     @Override
     public Component describe(BuffTarget target) {
+        return Component.literal("Targets ").append(describeTargets(target));
+    }
+
+    public Component describeTargets(BuffTarget target) {
         List<Component> targets = new ArrayList<>();
 
         if (target.owner()) {
@@ -30,32 +34,50 @@ public class BuffTargetDescriber implements ObjectDescriber<BuffTarget> {
         }
 
         if (targets.isEmpty()) {
-            // Shouldn't get here
-            return Component.literal("Targets nobody.");
+            return Component.literal("nobody");
         }
 
-        return Component.literal("Targets ").append(ObjectDescriber.joinClauses(targets));
+        return ObjectDescriber.joinClauses(targets);
     }
 
-    public Component describeModification(BuffTarget previous, BuffTarget current) {
-        List<Component> changes = new ArrayList<>();
+    public List<Component> describeModification(BuffTarget previous, BuffTarget current) {
+        List<String> added = new ArrayList<>();
+        List<String> removed = new ArrayList<>();
 
         if (previous.self() != current.self()) {
-            changes.add(Component.literal("this pet is" + (current.self() ? " now a target" : " no longer a target")));
+            (current.self() ? added : removed).add("this pet");
         }
 
         if (previous.owner() != current.owner()) {
-            changes.add(Component.literal("the owner is" + (current.owner() ? " now a target" : " no longer a target")));
+            (current.owner() ? added : removed).add("the owner");
         }
 
         if (previous.otherPets() != current.otherPets()) {
-            changes.add(Component.literal("the other pets are" + (current.otherPets() ? " now targets" : " no longer targets")));
+            (current.otherPets() ? added : removed).add("other pets");
         }
 
-        if (changes.isEmpty()) {
-            return Component.empty();
+        List<Component> changes = new ArrayList<>();
+
+        if (!added.isEmpty()) {
+            changes.add(describeTargetChange(added, true));
         }
 
-        return ObjectDescriber.joinClauses(changes);
+        if (!removed.isEmpty()) {
+            changes.add(describeTargetChange(removed, false));
+        }
+
+        return changes;
+    }
+
+    private static Component describeTargetChange(List<String> targets, boolean added) {
+        boolean plural = targets.size() > 1 || targets.contains("Other pets");
+        List<Component> targeted = new ArrayList<>(List.of());
+        targets.forEach((s -> targeted.add(Component.literal(s))));
+        return Component.literal(
+                ObjectDescriber.joinClauses(targeted).getString()
+                        + (plural ? " are " : " is ")
+                        + (added ? "now " : "no longer ")
+                        + (plural ? "targets" : "a target")
+        );
     }
 }

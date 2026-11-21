@@ -2,9 +2,10 @@ package com.bonsai.pixelpets;
 
 import com.bonsai.pixelpets.networking.NetworkHandler;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
-import com.bonsai.pixelpets.pixelpets.registration.data.ability.EntityCondition;
-import com.bonsai.pixelpets.platform.Services;
+import com.bonsai.pixelpets.pixelpets.registration.data.ability.conditions.TargetConditionType;
 import com.bonsai.pixelpets.registry.*;
+import com.mojang.serialization.Lifecycle;
+import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -25,10 +26,10 @@ public class PixelPets {
     public static final ResourceKey<Registry<PixelPetData>> PET_DATA = ResourceKey.createRegistryKey(ResourceLocation.withDefaultNamespace("pet_data"));
     public static Map<EntityType<?>, Set<ResourceLocation>> scaredByMap = new HashMap<>();
 
-    public static void init() {
-        LOGGER.info("Common init on {}! we are currently in a {} environment!", Services.PLATFORM.getPlatformName(), Services.PLATFORM.getEnvironmentName());
-        LOGGER.info(Arrays.toString(Arrays.stream(EntityCondition.Type.values()).map(EntityCondition.Type::getSerializedName).toArray()));
+    public static final ResourceKey<Registry<TargetConditionType<?>>> TARGET_CONDITION_TYPE = ResourceKey.createRegistryKey(id("target_condition_type"));
+    public static final MappedRegistry<TargetConditionType<?>> TARGET_CONDITION_TYPES = new MappedRegistry<>(TARGET_CONDITION_TYPE, Lifecycle.stable());
 
+    public static void init() {
         ModParticles.PARTICLE_TYPES.init();
 
         ModSounds.SOUND_EVENTS.init();
@@ -46,6 +47,9 @@ public class PixelPets {
         ModItems.CREATIVE_TABS.init();
 
         ModEntities.ENTITY_TYPES.init();
+
+        ModTargetConditions.TYPES.init();
+
         NetworkHandler.init();
     }
 

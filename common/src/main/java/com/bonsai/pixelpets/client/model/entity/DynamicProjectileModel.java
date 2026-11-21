@@ -6,11 +6,13 @@ import com.bonsai.pixelpets.pixelpets.registration.data.cosmetic.ProjectileRende
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 
+import java.util.Optional;
+
 public class DynamicProjectileModel extends DefaultedEntityGeoModel<AbstractPixelPetProjectile> {
 
     private static final ResourceLocation FALLBACK = PixelPets.id("empty_pet_projectile");
     private static final ProjectileRenderData.Modeled FALLBACK_DATA =
-            new ProjectileRenderData.Modeled(FALLBACK, FALLBACK, FALLBACK, 1.0f, false);
+            new ProjectileRenderData.Modeled(FALLBACK, FALLBACK, FALLBACK, 1.0f, false, Optional.empty());
 
     public DynamicProjectileModel() {
         super(FALLBACK);

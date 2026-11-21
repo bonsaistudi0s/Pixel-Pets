@@ -12,7 +12,6 @@ import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
 
-// TODO
 public class SwimmingPixelPetEntity extends AbstractPixelPetEntity{
     public SwimmingPixelPetEntity(EntityType<? extends TamableAnimal> entityType, Level level) {
         super(entityType, level);
@@ -50,7 +49,7 @@ public class SwimmingPixelPetEntity extends AbstractPixelPetEntity{
                 this.hurt(this.damageSources().drown(), 2.0F);
             }
         } else {
-            this.setAirSupply(300);
+            this.setAirSupply(200);
         }
 
     }

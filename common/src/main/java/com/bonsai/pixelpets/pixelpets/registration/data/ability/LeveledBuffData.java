@@ -1,5 +1,6 @@
 package com.bonsai.pixelpets.pixelpets.registration.data.ability;
 
+import com.bonsai.pixelpets.pixelpets.registration.data.ability.conditions.TargetCondition;
 import com.bonsai.pixelpets.pixelpets.registration.data.cosmetic.ParticleData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
@@ -8,43 +9,59 @@ import net.minecraft.world.entity.LivingEntity;
 
 import java.util.*;
 
-// TODO consider adding particles/sfx when applying
-public record LeveledBuffData(NavigableMap<Integer, List<PartialBuff>> keyframes) {
+public record LeveledBuffData(NavigableMap<Integer, LevelData> keyframes) {
 
     private static final BuffTarget DEFAULT_TARGET = new BuffTarget(true, false, false);
     private static final int DEFAULT_COOLDOWN = 200;
 
-    public static final Codec<LeveledBuffData> CODEC = Codec.unboundedMap(Codec.STRING.comapFlatMap(s -> {
-        try {
-            return DataResult.success(Integer.valueOf(s));
-        } catch (NumberFormatException e) {
-            return DataResult.error(() -> "Not a valid level: " + s);
-        }
-    }, String::valueOf), PartialBuff.CODEC.listOf()).xmap(map -> new LeveledBuffData(new TreeMap<>(map)), LeveledBuffData::keyframes);
+    public record LevelData(List<PartialBuff> buffs, Optional<String> descriptionOverride) {
+        public static final Codec<LevelData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                PartialBuff.CODEC.listOf().fieldOf("buffs").forGetter(LevelData::buffs),
+                Codec.STRING.optionalFieldOf("description_override").forGetter(LevelData::descriptionOverride)
+        ).apply(instance, LevelData::new));
+    }
+
+    public static final Codec<LeveledBuffData> CODEC = Codec.unboundedMap(
+            Codec.STRING.comapFlatMap(s -> {
+                try {
+                    return DataResult.success(Integer.valueOf(s));
+                } catch (NumberFormatException e) {
+                    return DataResult.error(() -> "Not a valid level: " + s);
+                }
+            }, String::valueOf),
+            LevelData.CODEC
+    ).xmap(map -> new LeveledBuffData(new TreeMap<>(map)), LeveledBuffData::keyframes);
 
     public PixelPetBuffData resolve(int level) {
         Map<String, PartialBuff> merged = new LinkedHashMap<>();
+        Optional<String> descriptionOverride = Optional.empty();
 
-        for (List<PartialBuff> buffs : this.keyframes.headMap(level, true).values()) {
-            buffs.forEach(buff -> merged.merge(buff.id(), buff, PartialBuff::mergeWith));
+        for (LevelData levelData : this.keyframes.headMap(level, true).values()) {
+            descriptionOverride = levelData.descriptionOverride().or(Optional::empty);
+
+            levelData.buffs().forEach(buff -> merged.merge(buff.id(), buff, PartialBuff::mergeWith));
         }
 
-        return new PixelPetBuffData(merged.values().stream().map(PartialBuff::toComplete).toList());
+        return new PixelPetBuffData(
+                merged.values().stream().map(PartialBuff::toComplete).toList(),
+                descriptionOverride
+        );
     }
 
     public record PartialBuff(String id,
                               Optional<BuffTarget> target,
                               Optional<Integer> cooldown,
-                              Optional<List<EntityCondition>> conditions,
+                              Optional<List<TargetCondition>> conditions,
                               Optional<List<StatusEffectApplication>> statusEffects,
                               Optional<List<AttributeModifierApplication>> attributeModifiers,
-                              Optional<ParticleData> particles) {
+                              Optional<ParticleData> particles
+    ) {
 
         public static final Codec<PartialBuff> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.STRING.fieldOf("id").forGetter(PartialBuff::id),
                 BuffTarget.CODEC.optionalFieldOf("targets").forGetter(PartialBuff::target),
                 Codec.INT.optionalFieldOf("cooldown").forGetter(PartialBuff::cooldown),
-                EntityCondition.CODEC.listOf().optionalFieldOf("conditions").forGetter(PartialBuff::conditions),
+                TargetCondition.CODEC.listOf().optionalFieldOf("conditions").forGetter(PartialBuff::conditions),
                 StatusEffectApplication.CODEC.listOf().optionalFieldOf("status_effects").forGetter(PartialBuff::statusEffects),
                 AttributeModifierApplication.CODEC.listOf().optionalFieldOf("attribute_modifiers").forGetter(PartialBuff::attributeModifiers),
                 ParticleData.CODEC.optionalFieldOf("particles").forGetter(PartialBuff::particles)
@@ -72,12 +89,12 @@ public record LeveledBuffData(NavigableMap<Integer, List<PartialBuff>> keyframes
         }
     }
 
-    public record PixelPetBuffData(List<BuffData> buffs) {}
+    public record PixelPetBuffData(List<BuffData> buffs, Optional<String> descriptionOverride) {}
 
     public record BuffData(String id,
                            BuffTarget target,
                            int cooldown,
-                           List<EntityCondition> conditions,
+                           List<TargetCondition> conditions,
                            List<StatusEffectApplication> statusEffects,
                            List<AttributeModifierApplication> attributeModifiers,
                            Optional<ParticleData> particles) {

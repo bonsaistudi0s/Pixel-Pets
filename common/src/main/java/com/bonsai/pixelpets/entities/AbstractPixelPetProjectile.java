@@ -3,14 +3,17 @@ package com.bonsai.pixelpets.entities;
 import com.bonsai.pixelpets.PixelPets;
 import com.bonsai.pixelpets.pixelpets.PlayerPetAccess;
 import com.bonsai.pixelpets.pixelpets.registration.PixelPetData;
+import com.bonsai.pixelpets.pixelpets.registration.data.cosmetic.ParticleData;
 import com.bonsai.pixelpets.pixelpets.registration.data.cosmetic.ProjectileRenderData;
 import com.bonsai.pixelpets.pixelpets.registration.data.ability.StatusEffectApplication;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
@@ -158,6 +161,14 @@ public abstract class AbstractPixelPetProjectile extends Projectile implements G
             this.hitTargetOrDeflectSelf(hitresult);
         }
 
+        if (getRenderData().trail().isPresent()) {
+            if (this.level().getGameTime() % getRenderData().trail().get().count() == 0) {
+                if (getRenderData().trail().get().particleType() instanceof SimpleParticleType particle) {
+                    this.level().addParticle(particle, this.getX(), this.getY(), this.getZ(), 0.0, 0.0, 0.0);
+                }
+            }
+        }
+
         // Once every 2 ticks feels smoother in-game at 20TPS
         if (this.level().getGameTime() % 2 == 0) increaseGrowth();
 
@@ -259,6 +270,7 @@ public abstract class AbstractPixelPetProjectile extends Projectile implements G
         DamageSource damagesource = this.damageSources().mobProjectile(this, pixelPet);
         if (target.hurt(damagesource, pixelPet.getDamage() * this.getGrowth())) {
             doKnockback(pixelPet, target);
+            pixelPet.summonParticlesOnHit(target);
 
             // Status Effects
             for (StatusEffectApplication effect : pixelPet.getOnHitStatuses()) {
